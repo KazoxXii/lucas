@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>A7 PROD. | Aventure - Folie - Liberté</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">A7 <span>PROD.</span></a>
+            <ul class="nav-links">
+                <li><a href="#hero">Accueil</a></li>
+                <li><a href="#collections">Collections</a></li>
+                <li><a href="#shop">Boutique</a></li>
+                <li><a href="#about">Notre Histoire</a></li>
+            </ul>
+            <div class="nav-icons">
+                <a href="#"><i class="fas fa-search"></i></a>
+                <a href="#"><i class="fas fa-shopping-bag"></i></a>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-close" id="mobileClose" aria-label="Fermer">&times;</button>
+        <a href="#hero">Accueil</a>
+        <a href="#collections">Collections</a>
+        <a href="#shop">Boutique</a>
+        <a href="#about">Notre Histoire</a>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">&times;</button>
+        <img src="" alt="Vue agrandie" id="lightboxImg">
+        <span class="lightbox-hint">Pincer pour zoomer</span>
+    </div>
+
+    <header id="hero" class="hero">
+        <div class="hero-img" style="background-image: url('images/hero-collection.jpg')"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content" data-animate="fade-up">
+            <p class="hero-sub">Aventure - Folie - Liberté</p>
+            <h1 class="hero-title">A7 <span>PROD.</span></h1>
+            <p class="hero-tagline">Vivre. Créer. Partager.</p>
+            <a href="#shop" class="btn-main">Découvrir la Collection</a>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <p>Scroll</p>
+        </div>
+    </header>
+
+    <section class="brand-strip">
+        <div class="marquee">
+            <div class="marquee-inner">
+                <span>A7 PROD.</span>
+                <span class="dot">&#x2022;</span>
+                <span>Aventure</span>
+                <span class="dot">&#x2022;</span>
+                <span>Folie</span>
+                <span class="dot">&#x2022;</span>
+                <span>Liberté</span>
+                <span class="dot">&#x2022;</span>
+                <span>Créer des souvenirs et pas des excuses</span>
+                <span class="dot">&#x2022;</span>
+                <span>No Rules. Just Stories.</span>
+                <span class="dot">&#x2022;</span>
+                <span>A7 PROD.</span>
+                <span class="dot">&#x2022;</span>
+                <span>Aventure</span>
+                <span class="dot">&#x2022;</span>
+                <span>Folie</span>
+                <span class="dot">&#x2022;</span>
+                <span>Liberté</span>
+                <span class="dot">&#x2022;</span>
+                <span>Créer des souvenirs et pas des excuses</span>
+                <span class="dot">&#x2022;</span>
+                <span>No Rules. Just Stories.</span>
+                <span class="dot">&#x2022;</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="collections" class="collections">
+        <div class="section-header" data-animate="fade-up">
+            <h2>Les Collections</h2>
+            <div class="line"></div>
+        </div>
+        <div class="collections-grid">
+            <div class="collection-card" data-animate="fade-up">
+                <div class="collection-img">
+                    <img src="images/hero-collection.jpg" alt="Collection T-Shirts">
+                </div>
+                <div class="collection-info">
+                    <h3>T-Shirts</h3>
+                    <p>12 pièces</p>
+                </div>
+            </div>
+            <div class="collection-card" data-animate="fade-up" data-delay="0.2">
+                <div class="collection-img">
+                    <img src="images/collection-bottoms.jpg" alt="Collection Bottoms">
+                </div>
+                <div class="collection-info">
+                    <h3>Shorts & Joggings</h3>
+                    <p>18 pièces</p>
+                </div>
+            </div>
+            <div class="collection-card" data-animate="fade-up" data-delay="0.4">
+                <div class="collection-img">
+                    <img src="images/collection-hoodies.jpg" alt="Collection Hoodies">
+                </div>
+                <div class="collection-info">
+                    <h3>Hoodies & Outerwear</h3>
+                    <p>10 pièces</p>
+                </div>
+            </div>
+        </div>
+        <p class="swipe-hint">&#8592; Glisser pour voir plus &#8594;</p>
+    </section>
+
+    <section class="statement">
+        <div class="statement-bg" style="background-image: url('images/collection-hoodies.jpg')"></div>
+        <div class="statement-overlay"></div>
+        <div class="statement-content" data-animate="fade-up">
+            <h2>"Des vêtements pensés pour ceux qui préfèrent les chemins de traverse aux routes toutes tracées."</h2>
+            <div class="line gold"></div>
+        </div>
+    </section>
+
+    <section id="shop" class="shop">
+        <div class="section-header" data-animate="fade-up">
+            <h2>Best Sellers</h2>
+            <div class="line"></div>
+        </div>
+
+        <div class="products-row">
+            <div class="product-card" data-animate="fade-up">
+                <div class="product-flip">
+                    <div class="flip-front">
+                        <img src="images/tshirt-cream.jpg" alt="T-Shirt Créer des Souvenirs">
+                    </div>
+                    <div class="flip-back">
+                        <div class="flip-content">
+                            <h4>Créer des Souvenirs</h4>
+                            <p>T-Shirt Oversize Beige</p>
+                            <span class="price">49,99 €</span>
+                            <button class="btn-add">Ajouter au panier</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-animate="fade-up" data-delay="0.2">
+                <div class="product-flip">
+                    <div class="flip-front">
+                        <img src="images/tshirt-beige.jpg" alt="T-Shirt Pas Besoin de Plan">
+                    </div>
+                    <div class="flip-back">
+                        <div class="flip-content">
+                            <h4>Pas Besoin de Plan</h4>
+                            <p>T-Shirt Oversize Kaki</p>
+                            <span class="price">49,99 €</span>
+                            <button class="btn-add">Ajouter au panier</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card" data-animate="fade-up" data-delay="0.4">
+                <div class="product-flip">
+                    <div class="flip-front">
+                        <img src="images/tshirt-black.jpg" alt="T-Shirt Go Far Stay Wild">
+                    </div>
+                    <div class="flip-back">
+                        <div class="flip-content">
+                            <h4>Go Far. Stay Wild.</h4>
+                            <p>T-Shirt Oversize Noir</p>
+                            <span class="price">49,99 €</span>
+                            <button class="btn-add">Ajouter au panier</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="swipe-hint">&#8592; Glisser pour voir plus &#8594;</p>
+
+        <div class="shop-cta" data-animate="fade-up">
+            <a href="#" class="btn-main">Voir toute la boutique</a>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="about-grid">
+            <div class="about-img" data-animate="fade-right">
+                <img src="images/collection-bottoms.jpg" alt="A7 PROD Collection">
+            </div>
+            <div class="about-text" data-animate="fade-left">
+                <h2>L'Aventure commence là où le plan s'arrête.</h2>
+                <div class="line gold"></div>
+                <p>A7 PROD., c'est plus qu'une marque. C'est un mode de vie pour ceux qui osent. Chaque pièce est conçue pour accompagner vos plus grandes folies, vos voyages sans destination, vos nuits sous les étoiles.</p>
+                <p>Nous créons des vêtements qui racontent une histoire — la vôtre.</p>
+                <div class="about-icons">
+                    <div class="icon-item">
+                        <i class="fas fa-mountain"></i>
+                        <span>Aventure</span>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fas fa-globe"></i>
+                        <span>Explorer</span>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fas fa-fire"></i>
+                        <span>Folie</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-top">
+            <div class="footer-brand">
+                <h3>A7 <span>PROD.</span></h3>
+                <p>Plus qu'une marque, un mode de vie.</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Boutique</h4>
+                    <a href="#">T-Shirts</a>
+                    <a href="#">Hoodies</a>
+                    <a href="#">Shorts</a>
+                    <a href="#">Joggings</a>
+                    <a href="#">Accessories</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Aide</h4>
+                    <a href="#">Livraison</a>
+                    <a href="#">Retours</a>
+                    <a href="#">Tailles</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Suivez-nous</h4>
+                    <div class="socials">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 A7 PROD. Tous droits réservés.</p>
+            <p class="credit">Site réalisé par <a href="https://maltyshop.vercel.app/" target="_blank">MaltyShop</a></p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
