@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --admin-bg: #0a0a0a;
+            --admin-card: #111111;
+            --admin-border: #222222;
+            --admin-hover: #1a1a1a;
+            --jaune: #f5a623;
+            --jaune-clair: #fbbf24;
+            --vert: #22c55e;
+            --rouge: #ef4444;
+            --bleu: #3b82f6;
+            --violet: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--admin-bg);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* SIDEBAR */
+        .admin-sidebar {
+            width: 260px;
+            background: var(--admin-card);
+            border-right: 1px solid var(--admin-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--admin-border);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-brand .plus {
+            color: var(--jaune);
+        }
+
+        .sidebar-brand span.badge {
+            font-size: 0.65rem;
+            background: var(--jaune);
+            color: #000;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 0.25rem;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            font-size: 0.7rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 1rem 0.75rem 0.5rem;
+            font-weight: 600;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.7rem 0.75rem;
+            border-radius: 8px;
+            color: #999;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar-link:hover {
+            background: var(--admin-hover);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--jaune);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .sidebar-link .icon {
+            font-size: 1.15rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-link .count {
+            margin-left: auto;
+            background: rgba(255,255,255,0.1);
+            color: var(--jaune);
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .sidebar-link.active .count {
+            background: rgba(0,0,0,0.2);
+            color: #000;
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--admin-border);
+        }
+
+        .sidebar-user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--jaune);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            font-size: 0.85rem;
+        }
+
+        .sidebar-user-info span {
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        .sidebar-logout {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+
+        .sidebar-logout:hover {
+            color: var(--rouge);
+        }
+
+        /* MAIN */
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .admin-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-topbar h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .admin-topbar h1 span {
+            color: var(--jaune);
+        }
+
+        .admin-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-add-client {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--jaune);
+            color: #000;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add-client:hover {
+            background: var(--jaune-clair);
+            transform: translateY(-1px);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(245, 166, 35, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.yellow { background: rgba(245, 166, 35, 0.15); }
+        .stat-icon.green { background: rgba(34, 197, 94, 0.15); }
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); }
+        .stat-icon.purple { background: rgba(139, 92, 246, 0.15); }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .stat-change.up { color: var(--vert); }
+        .stat-change.down { color: var(--rouge); }
+
+        /* CONTENT GRID */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .admin-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .admin-card-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .admin-card-link {
+            font-size: 0.85rem;
+            color: var(--jaune);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .admin-card-link:hover {
+            text-decoration: underline;
+        }
+
+        /* CLIENTS TABLE */
+        .clients-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .clients-table th {
+            text-align: left;
+            padding: 0.75rem 0;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .clients-table td {
+            padding: 0.85rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--admin-border);
+            vertical-align: middle;
+        }
+
+        .clients-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .client-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .client-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .client-avatar.a1 { background: var(--jaune); }
+        .client-avatar.a2 { background: var(--vert); }
+        .client-avatar.a3 { background: var(--bleu); }
+        .client-avatar.a4 { background: var(--violet); }
+        .client-avatar.a5 { background: #f472b6; }
+
+        .client-name strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .client-name span {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .plan-badge.starter { background: rgba(245, 166, 35, 0.15); color: var(--jaune); }
+        .plan-badge.pro { background: rgba(59, 130, 246, 0.15); color: var(--bleu); }
+        .plan-badge.premium { background: rgba(139, 92, 246, 0.15); color: var(--violet); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active { background: rgba(34, 197, 94, 0.15); color: var(--vert); }
+        .status-badge.inactive { background: rgba(239, 68, 68, 0.15); color: var(--rouge); }
+        .status-badge.pending { background: rgba(245, 166, 35, 0.15); color: var(--jaune); }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--admin-border);
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--jaune);
+            color: var(--jaune);
+            background: rgba(245, 166, 35, 0.1);
+        }
+
+        .action-btn.delete:hover {
+            border-color: var(--rouge);
+            color: var(--rouge);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* REVENUS */
+        .revenue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .revenue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--admin-hover);
+            border-radius: 8px;
+        }
+
+        .revenue-item-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .revenue-item-icon {
+            font-size: 1.25rem;
+        }
+
+        .revenue-item-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .revenue-item-date {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .revenue-item-amount {
+            font-weight: 700;
+            color: var(--vert);
+        }
+
+        /* FULL WIDTH TABLE */
+        .full-width-section {
+            margin-bottom: 2rem;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .modal-form label {
+            font-size: 0.8rem;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+
+        .modal-form input,
+        .modal-form select {
+            width: 100%;
+            padding: 0.7rem 0.85rem;
+            background: var(--admin-bg);
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .modal-form input:focus,
+        .modal-form select:focus {
+            border-color: var(--jaune);
+        }
+
+        .modal-form select option {
+            background: var(--admin-bg);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel {
+            background: var(--admin-hover);
+            border: 1px solid var(--admin-border) !important;
+            color: #999;
+        }
+
+        .btn-cancel:hover {
+            color: #fff;
+            border-color: #666 !important;
+        }
+
+        .btn-save {
+            background: var(--jaune);
+            color: #000;
+        }
+
+        .btn-save:hover {
+            background: var(--jaune-clair);
+        }
+
+        /* SECTIONS */
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        /* NOTIFICATION */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 300;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-color: var(--vert);
+        }
+
+        .notification.error {
+            border-color: var(--rouge);
+        }
+
+        .notification-icon {
+            font-size: 1.25rem;
+        }
+
+        .notification-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .admin-topbar {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .admin-topbar-actions {
+                width: 100%;
+            }
+
+            .btn-add-client {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .clients-table {
+                font-size: 0.85rem;
+            }
+
+            .clients-table th:nth-child(3),
+            .clients-table td:nth-child(3),
+            .clients-table th:nth-child(4),
+            .clients-table td:nth-child(4) {
+                display: none;
+            }
+
+            .modal {
+                margin: 1rem;
+            }
+
+            .modal-form .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span>VOIR MON PLAT</span><span class="plus">+</span>
+            <span class="badge">Admin</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Principal</div>
+            <a class="sidebar-link active" data-section="dashboard" onclick="switchSection('dashboard')">
+                <span class="icon">📊</span>
+                <span>Tableau de bord</span>
+            </a>
+            <a class="sidebar-link" data-section="clients" onclick="switchSection('clients')">
+                <span class="icon">👥</span>
+                <span>Clients</span>
+                <span class="count" id="clientCount">0</span>
+            </a>
+            <a class="sidebar-link" data-section="abonnements" onclick="switchSection('abonnements')">
+                <span class="icon">💳</span>
+                <span>Abonnements</span>
+            </a>
+
+            <div class="sidebar-section">Finance</div>
+            <a class="sidebar-link" data-section="paiements" onclick="switchSection('paiements')">
+                <span class="icon">💰</span>
+                <span>Paiements</span>
+            </a>
+            <a class="sidebar-link" data-section="revenus" onclick="switchSection('revenus')">
+                <span class="icon">📈</span>
+                <span>Revenus</span>
+            </a>
+
+            <div class="sidebar-section">Support</div>
+            <a class="sidebar-link" data-section="tickets" onclick="switchSection('tickets')">
+                <span class="icon">🎫</span>
+                <span>Tickets</span>
+                <span class="count">3</span>
+            </a>
+            <a class="sidebar-link" data-section="parametres" onclick="switchSection('parametres')">
+                <span class="icon">⚙️</span>
+                <span>Parametres</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar" id="adminAvatar">AD</div>
+            <div class="sidebar-user-info">
+                <strong id="adminName">Admin</strong>
+                <span>Administrateur</span>
+            </div>
+            <button class="sidebar-logout" onclick="adminLogout()" title="Deconnexion">🚪</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="admin-main">
+
+        <!-- DASHBOARD -->
+        <section class="admin-section active" id="section-dashboard">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Tableau de <span>bord</span></h1>
+                </div>
+                <div class="admin-topbar-actions">
+                    <button class="btn-add-client" onclick="openModal()">
+                        <span>+</span> Ajouter un client
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon yellow">👥</div>
+                    <div>
+                        <div class="stat-value" id="statClients">0</div>
+                        <div class="stat-label">Clients actifs</div>
+                        <div class="stat-change up">+12% ce mois</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">💰</div>
+                    <div>
+                        <div class="stat-value" id="statRevenue">0€</div>
+                        <div class="stat-label">Revenus mensuels</div>
+                        <div class="stat-change up">+8% ce mois</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">📱</div>
+                    <div>
+                        <div class="stat-value" id="statScans">0</div>
+                        <div class="stat-label">Scans QR total</div>
+                        <div class="stat-change up">+23% ce mois</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">⭐</div>
+                    <div>
+                        <div class="stat-value" id="statConversion">0%</div>
+                        <div class="stat-label">Taux de conversion</div>
+                        <div class="stat-change up">+3% ce mois</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3>Clients recents</h3>
+                        <a class="admin-card-link" onclick="switchSection('clients')">Voir tout →</a>
+                    </div>
+                    <table class="clients-table">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Plan</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentClientsTable">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3>Derniers paiements</h3>
+                        <a class="admin-card-link" onclick="switchSection('paiements')">Voir tout →</a>
+                    </div>
+                    <div class="revenue-list" id="recentPayments">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CLIENTS -->
+        <section class="admin-section" id="section-clients">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Gestion des <span>clients</span></h1>
+                </div>
+                <div class="admin-topbar-actions">
+                    <button class="btn-add-client" onclick="openModal()">
+                        <span>+</span> Ajouter un client
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-card full-width-section">
+                <table class="clients-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Plan</th>
+                            <th>Abonnement</th>
+                            <th>Statut</th>
+                            <th>Inscrit le</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allClientsTable">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ABONNEMENTS -->
+        <section class="admin-section" id="section-abonnements">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Gestion des <span>abonnements</span></h1>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon yellow">🍽️</div>
+                    <div>
+                        <div class="stat-value" id="statStarter">0</div>
+                        <div class="stat-label">Plan Starter (29€)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">🚀</div>
+                    <div>
+                        <div class="stat-value" id="statPro">0</div>
+                        <div class="stat-label">Plan Pro (69€)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">👑</div>
+                    <div>
+                        <div class="stat-value" id="statPremium">0</div>
+                        <div class="stat-label">Plan Premium (149€)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">📊</div>
+                    <div>
+                        <div class="stat-value" id="statMRR">0€</div>
+                        <div class="stat-label">MRR Total</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card full-width-section">
+                <div class="admin-card-header">
+                    <h3>Distribution des abonnements</h3>
+                </div>
+                <div id="subscriptionBreakdown" style="display:flex;gap:2rem;flex-wrap:wrap;">
+                </div>
+            </div>
+        </section>
+
+        <!-- PAIEMENTS -->
+        <section class="admin-section" id="section-paiements">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Historique des <span>paiements</span></h1>
+                </div>
+            </div>
+
+            <div class="admin-card full-width-section">
+                <table class="clients-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Montant</th>
+                            <th>Plan</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allPaymentsTable">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- REVENUS -->
+        <section class="admin-section" id="section-revenus">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Analyse des <span>revenus</span></h1>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">💰</div>
+                    <div>
+                        <div class="stat-value" id="statTotalRevenue">0€</div>
+                        <div class="stat-label">Revenu total</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">📅</div>
+                    <div>
+                        <div class="stat-value" id="statMonthlyRevenue">0€</div>
+                        <div class="stat-label">Ce mois</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">🔄</div>
+                    <div>
+                        <div class="stat-value" id="statARPU">0€</div>
+                        <div class="stat-label">ARPU</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">📊</div>
+                    <div>
+                        <div class="stat-value" id="statChurn">0%</div>
+                        <div class="stat-label">Taux de churn</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TICKETS -->
+        <section class="admin-section" id="section-tickets">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Tickets <span>support</span></h1>
+                </div>
+            </div>
+
+            <div class="admin-card full-width-section">
+                <table class="clients-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Sujet</th>
+                            <th>Priorite</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="client-cell"><div class="client-avatar a1">ML</div><div class="client-name"><strong>Marie Laurent</strong><span>marie@bistrot.com</span></div></div></td>
+                            <td>Impossible de modifier mes plats</td>
+                            <td><span style="color:var(--rouge);">Haute</span></td>
+                            <td><span class="status-badge pending"><span class="status-dot"></span>En cours</span></td>
+                            <td>05/08/2026</td>
+                        </tr>
+                        <tr>
+                            <td><div class="client-cell"><div class="client-avatar a3">PD</div><div class="client-name"><strong>Pierre Dupont</strong><span>pierre@cafe.fr</span></div></div></td>
+                            <td>Question sur le plan Premium</td>
+                            <td><span style="color:var(--jaune);">Moyenne</span></td>
+                            <td><span class="status-badge active"><span class="status-dot"></span>Ouvert</span></td>
+                            <td>04/08/2026</td>
+                        </tr>
+                        <tr>
+                            <td><div class="client-cell"><div class="client-avatar a5">SB</div><div class="client-name"><strong>Sophie Bernard</strong><span>sophie@restaurant.com</span></div></div></td>
+                            <td>Facture non recue</td>
+                            <td><span style="color:var(--gris);">Basse</span></td>
+                            <td><span class="status-badge active"><span class="status-dot"></span>Resolu</span></td>
+                            <td>03/08/2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PARAMETRES -->
+        <section class="admin-section" id="section-parametres">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Parametres</h1>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3>Informations du compte</h3>
+                    </div>
+                    <div class="modal-form">
+                        <div>
+                            <label>Nom</label>
+                            <input type="text" value="Admin VOIR MON PLAT+" id="settingsName">
+                        </div>
+                        <div>
+                            <label>Email</label>
+                            <input type="email" value="admin@voirmonplat.com" id="settingsEmail">
+                        </div>
+                        <div>
+                            <label>Mot de passe actuel</label>
+                            <input type="password" placeholder="••••••••" id="settingsPassword">
+                        </div>
+                        <div>
+                            <label>Nouveau mot de passe</label>
+                            <input type="password" placeholder="••••••••" id="settingsNewPassword">
+                        </div>
+                        <button class="btn-add-client" style="align-self:flex-start;margin-top:0.5rem;" onclick="saveSettings()">
+                            Sauvegarder
+                        </button>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3>Preferences</h3>
+                    </div>
+                    <div class="modal-form">
+                        <div class="remember-check" style="padding:0.75rem;background:var(--admin-hover);border-radius:8px;">
+                            <input type="checkbox" id="notifEmail" checked>
+                            <label for="notifEmail" style="font-size:0.9rem;">Notifications email</label>
+                        </div>
+                        <div class="remember-check" style="padding:0.75rem;background:var(--admin-hover);border-radius:8px;">
+                            <input type="checkbox" id="autoRenew" checked>
+                            <label for="autoRenew" style="font-size:0.9rem;">Renouvellement automatique</label>
+                        </div>
+                        <div class="remember-check" style="padding:0.75rem;background:var(--admin-hover);border-radius:8px;">
+                            <input type="checkbox" id="darkMode" checked>
+                            <label for="darkMode" style="font-size:0.9rem;">Mode sombre</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL AJOUT CLIENT -->
+    <div class="modal-overlay" id="clientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Ajouter un client</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form class="modal-form" id="addClientForm" onsubmit="addClient(event)">
+                <div class="form-row">
+                    <div>
+                        <label>Prenom</label>
+                        <input type="text" id="clientPrenom" placeholder="Jean" required>
+                    </div>
+                    <div>
+                        <label>Nom</label>
+                        <input type="text" id="clientNom" placeholder="Dupont" required>
+                    </div>
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input type="email" id="clientEmail" placeholder="jean@restaurant.com" required>
+                </div>
+                <div>
+                    <label>Restaurant</label>
+                    <input type="text" id="clientRestaurant" placeholder="Le Petit Bistrot" required>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Plan</label>
+                        <select id="clientPlan" required>
+                            <option value="starter">Starter (29€/mois)</option>
+                            <option value="pro" selected>Pro (69€/mois)</option>
+                            <option value="premium">Premium (149€/mois)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Statut</label>
+                        <select id="clientStatut" required>
+                            <option value="active">Actif</option>
+                            <option value="inactive">Inactif</option>
+                            <option value="pending">En attente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Annuler</button>
+                    <button type="submit" class="btn-save">Ajouter le client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification">
+        <span class="notification-icon" id="notifIcon">✅</span>
+        <span class="notification-text" id="notifText">Action effectuee</span>
+    </div>
+
+    <script>
+        // AUTH CHECK
+        const adminSession = JSON.parse(localStorage.getItem('vmp_admin_session') || sessionStorage.getItem('vmp_admin_session'));
+        if (!adminSession || !adminSession.loggedIn) {
+            window.location.href = 'admin.html';
+        }
+
+        // DEFAULT CLIENTS DATA
+        const defaultClients = [
+            { id: 1, prenom: 'Marie', nom: 'Laurent', email: 'marie@bistrot.com', restaurant: 'Le Bistrot Parisien', plan: 'pro', statut: 'active', date: '15/06/2026', scans: 1245 },
+            { id: 2, prenom: 'Pierre', nom: 'Dupont', email: 'pierre@cafe.fr', restaurant: 'Cafe de la Gare', plan: 'starter', statut: 'active', date: '22/06/2026', scans: 567 },
+            { id: 3, prenom: 'Sophie', nom: 'Bernard', email: 'sophie@restaurant.com', restaurant: 'La Belle Epoque', plan: 'premium', statut: 'active', date: '01/07/2026', scans: 3421 },
+            { id: 4, prenom: 'Thomas', nom: 'Petit', email: 'thomas@brasserie.com', restaurant: 'Brasserie du Port', plan: 'pro', statut: 'active', date: '10/07/2026', scans: 892 },
+            { id: 5, prenom: 'Julie', nom: 'Moreau', email: 'julie@traiteur.com', restaurant: 'Traiteur Julie', plan: 'starter', statut: 'pending', date: '28/07/2026', scans: 0 },
+            { id: 6, prenom: 'Lucas', nom: 'Simon', email: 'lucas@grill.com', restaurant: 'La Grillade', plan: 'pro', statut: 'active', date: '02/08/2026', scans: 234 },
+            { id: 7, prenom: 'Emma', nom: 'Michel', email: 'emma@pizzeria.com', restaurant: 'Pizza Mia', plan: 'starter', statut: 'inactive', date: '15/07/2026', scans: 156 },
+        ];
+
+        const defaultPayments = [
+            { client: 'Marie Laurent', amount: 69, plan: 'Pro', date: '06/08/2026', statut: 'active' },
+            { client: 'Pierre Dupont', amount: 29, plan: 'Starter', date: '06/08/2026', statut: 'active' },
+            { client: 'Sophie Bernard', amount: 149, plan: 'Premium', date: '06/08/2026', statut: 'active' },
+            { client: 'Thomas Petit', amount: 69, plan: 'Pro', date: '06/08/2026', statut: 'active' },
+            { client: 'Lucas Simon', amount: 69, plan: 'Pro', date: '05/08/2026', statut: 'active' },
+            { client: 'Julie Moreau', amount: 29, plan: 'Starter', date: '01/08/2026', statut: 'pending' },
+        ];
+
+        // LOAD DATA
+        let clients = JSON.parse(localStorage.getItem('vmp_admin_clients')) || defaultClients;
+        let payments = JSON.parse(localStorage.getItem('vmp_admin_payments')) || defaultPayments;
+
+        function saveClients() {
+            localStorage.setItem('vmp_admin_clients', JSON.stringify(clients));
+        }
+
+        function savePayments() {
+            localStorage.setItem('vmp_admin_payments', JSON.stringify(payments));
+        }
+
+        // SIDEBAR
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function switchSection(section) {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + section).classList.add('active');
+
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        // STATS
+        function updateStats() {
+            const activeClients = clients.filter(c => c.statut === 'active').length;
+            const totalRevenue = clients.filter(c => c.statut === 'active').reduce((sum, c) => {
+                const prices = { starter: 29, pro: 69, premium: 149 };
+                return sum + (prices[c.plan] || 0);
+            }, 0);
+            const totalScans = clients.reduce((sum, c) => sum + (c.scans || 0), 0);
+
+            document.getElementById('statClients').textContent = activeClients;
+            document.getElementById('statRevenue').textContent = totalRevenue + '€';
+            document.getElementById('statScans').textContent = totalScans.toLocaleString();
+            document.getElementById('statConversion').textContent = Math.round((activeClients / Math.max(clients.length, 1)) * 100) + '%';
+            document.getElementById('clientCount').textContent = clients.length;
+
+            // Abonnements
+            const starter = clients.filter(c => c.plan === 'starter').length;
+            const pro = clients.filter(c => c.plan === 'pro').length;
+            const premium = clients.filter(c => c.plan === 'premium').length;
+
+            document.getElementById('statStarter').textContent = starter;
+            document.getElementById('statPro').textContent = pro;
+            document.getElementById('statPremium').textContent = premium;
+            document.getElementById('statMRR').textContent = (starter * 29 + pro * 69 + premium * 149) + '€';
+
+            // Revenus
+            document.getElementById('statTotalRevenue').textContent = (totalRevenue * 12) + '€';
+            document.getElementById('statMonthlyRevenue').textContent = totalRevenue + '€';
+            document.getElementById('statARPU').textContent = Math.round(totalRevenue / Math.max(activeClients, 1)) + '€';
+            document.getElementById('statChurn').textContent = Math.round(((clients.length - activeClients) / Math.max(clients.length, 1)) * 100) + '%';
+        }
+
+        // RENDER CLIENTS
+        function renderRecentClients() {
+            const tbody = document.getElementById('recentClientsTable');
+            const recent = clients.slice(-5).reverse();
+            const avatars = ['a1', 'a2', 'a3', 'a4', 'a5'];
+
+            tbody.innerHTML = recent.map((c, i) => `
+                <tr>
+                    <td>
+                        <div class="client-cell">
+                            <div class="client-avatar ${avatars[i % 5]}">${c.prenom[0]}${c.nom[0]}</div>
+                            <div class="client-name">
+                                <strong>${c.prenom} ${c.nom}</strong>
+                                <span>${c.restaurant}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="plan-badge ${c.plan}">${c.plan.charAt(0).toUpperCase() + c.plan.slice(1)}</span></td>
+                    <td><span class="status-badge ${c.statut}"><span class="status-dot"></span>${c.statut === 'active' ? 'Actif' : c.statut === 'pending' ? 'En attente' : 'Inactif'}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" onclick="editClient(${c.id})" title="Modifier">✏️</button>
+                            <button class="action-btn delete" onclick="deleteClient(${c.id})" title="Supprimer">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAllClients() {
+            const tbody = document.getElementById('allClientsTable');
+            const avatars = ['a1', 'a2', 'a3', 'a4', 'a5'];
+
+            tbody.innerHTML = clients.map((c, i) => `
+                <tr>
+                    <td>
+                        <div class="client-cell">
+                            <div class="client-avatar ${avatars[i % 5]}">${c.prenom[0]}${c.nom[0]}</div>
+                            <div class="client-name">
+                                <strong>${c.prenom} ${c.nom}</strong>
+                                <span>${c.email}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="plan-badge ${c.plan}">${c.plan.charAt(0).toUpperCase() + c.plan.slice(1)}</span></td>
+                    <td>${c.plan === 'starter' ? '29€' : c.plan === 'pro' ? '69€' : '149€'}/mois</td>
+                    <td><span class="status-badge ${c.statut}"><span class="status-dot"></span>${c.statut === 'active' ? 'Actif' : c.statut === 'pending' ? 'En attente' : 'Inactif'}</span></td>
+                    <td>${c.date}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" onclick="editClient(${c.id})" title="Modifier">✏️</button>
+                            <button class="action-btn delete" onclick="deleteClient(${c.id})" title="Supprimer">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPayments() {
+            const tbody = document.getElementById('allPaymentsTable');
+            tbody.innerHTML = payments.map(p => `
+                <tr>
+                    <td><strong>${p.client}</strong></td>
+                    <td style="color:var(--vert);font-weight:700;">${p.amount}€</td>
+                    <td><span class="plan-badge ${p.plan.toLowerCase()}">${p.plan}</span></td>
+                    <td>${p.date}</td>
+                    <td><span class="status-badge ${p.statut}"><span class="status-dot"></span>${p.statut === 'active' ? 'Paye' : 'En attente'}</span></td>
+                </tr>
+            `).join('');
+
+            const recentPayments = document.getElementById('recentPayments');
+            recentPayments.innerHTML = payments.slice(-5).reverse().map(p => `
+                <div class="revenue-item">
+                    <div class="revenue-item-info">
+                        <span class="revenue-item-icon">💳</span>
+                        <div>
+                            <div class="revenue-item-name">${p.client}</div>
+                            <div class="revenue-item-date">${p.date} • ${p.plan}</div>
+                        </div>
+                    </div>
+                    <span class="revenue-item-amount">+${p.amount}€</span>
+                </div>
+            `).join('');
+        }
+
+        // MODAL
+        function openModal() {
+            document.getElementById('clientModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('clientModal').classList.remove('active');
+            document.getElementById('addClientForm').reset();
+        }
+
+        function addClient(e) {
+            e.preventDefault();
+            const newClient = {
+                id: Date.now(),
+                prenom: document.getElementById('clientPrenom').value.trim(),
+                nom: document.getElementById('clientNom').value.trim(),
+                email: document.getElementById('clientEmail').value.trim(),
+                restaurant: document.getElementById('clientRestaurant').value.trim(),
+                plan: document.getElementById('clientPlan').value,
+                statut: document.getElementById('clientStatut').value,
+                date: new Date().toLocaleDateString('fr-FR'),
+                scans: 0
+            };
+
+            clients.push(newClient);
+            saveClients();
+
+            const prices = { starter: 29, pro: 69, premium: 149 };
+            payments.push({
+                client: newClient.prenom + ' ' + newClient.nom,
+                amount: prices[newClient.plan],
+                plan: newClient.plan.charAt(0).toUpperCase() + newClient.plan.slice(1),
+                date: newClient.date,
+                statut: newClient.statut === 'active' ? 'active' : 'pending'
+            });
+            savePayments();
+
+            updateStats();
+            renderRecentClients();
+            renderAllClients();
+            renderPayments();
+            closeModal();
+            showNotification('Client ajoute avec succes !', 'success');
+        }
+
+        function editClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('clientPrenom').value = client.prenom;
+            document.getElementById('clientNom').value = client.nom;
+            document.getElementById('clientEmail').value = client.email;
+            document.getElementById('clientRestaurant').value = client.restaurant;
+            document.getElementById('clientPlan').value = client.plan;
+            document.getElementById('clientStatut').value = client.statut;
+
+            openModal();
+
+            const form = document.getElementById('addClientForm');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                client.prenom = document.getElementById('clientPrenom').value.trim();
+                client.nom = document.getElementById('clientNom').value.trim();
+                client.email = document.getElementById('clientEmail').value.trim();
+                client.restaurant = document.getElementById('clientRestaurant').value.trim();
+                client.plan = document.getElementById('clientPlan').value;
+                client.statut = document.getElementById('clientStatut').value;
+
+                saveClients();
+                updateStats();
+                renderRecentClients();
+                renderAllClients();
+                closeModal();
+                showNotification('Client modifie avec succes !', 'success');
+
+                form.onsubmit = addClient;
+            };
+        }
+
+        function deleteClient(id) {
+            if (!confirm('Supprimer ce client ?')) return;
+            clients = clients.filter(c => c.id !== id);
+            saveClients();
+            updateStats();
+            renderRecentClients();
+            renderAllClients();
+            renderPayments();
+            showNotification('Client supprime', 'error');
+        }
+
+        // NOTIFICATION
+        function showNotification(text, type) {
+            const notif = document.getElementById('notification');
+            document.getElementById('notifText').textContent = text;
+            document.getElementById('notifIcon').textContent = type === 'success' ? '✅' : '❌';
+            notif.className = 'notification ' + type + ' show';
+            setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        // SETTINGS
+        function saveSettings() {
+            showNotification('Parametres sauvegardes !', 'success');
+        }
+
+        // LOGOUT
+        function adminLogout() {
+            localStorage.removeItem('vmp_admin_session');
+            sessionStorage.removeItem('vmp_admin_session');
+            window.location.href = 'admin.html';
+        }
+
+        // INIT
+        updateStats();
+        renderRecentClients();
+        renderAllClients();
+        renderPayments();
+    </script>
+
+</body>
+</html>

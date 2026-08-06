@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Admin | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-login-container::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--jaune);
+            border-radius: 50%;
+            filter: blur(200px);
+            opacity: 0.08;
+            top: -100px;
+            right: -100px;
+        }
+
+        .admin-login-container::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--jaune-fonce);
+            border-radius: 50%;
+            filter: blur(180px);
+            opacity: 0.06;
+            bottom: -100px;
+            left: -100px;
+        }
+
+        .admin-login-box {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .admin-login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .admin-login-header .logo-full {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-login-header .logo-full .plus {
+            color: var(--jaune);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid rgba(245, 166, 35, 0.25);
+            color: var(--jaune);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 1rem;
+        }
+
+        .admin-login-card {
+            background: var(--noir-card);
+            border: 1px solid var(--bordure);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+        }
+
+        .admin-login-card h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-login-card > p {
+            color: var(--gris);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .admin-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .admin-form label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gris);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-form input {
+            padding: 0.85rem 1rem;
+            background: var(--noir);
+            border: 1px solid var(--bordure);
+            border-radius: 10px;
+            color: var(--blanc);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .admin-form input::placeholder {
+            color: var(--gris-fonce);
+        }
+
+        .admin-form input:focus {
+            border-color: var(--jaune);
+            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.1);
+        }
+
+        .password-field {
+            position: relative;
+        }
+
+        .password-field input {
+            width: 100%;
+            padding-right: 3rem;
+        }
+
+        .toggle-pwd {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gris);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+        }
+
+        .toggle-pwd:hover {
+            color: var(--jaune);
+        }
+
+        .remember-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .remember-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remember-check input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--jaune);
+            cursor: pointer;
+        }
+
+        .remember-check label {
+            font-size: 0.85rem;
+            color: var(--gris);
+            cursor: pointer;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 400;
+        }
+
+        .forgot-link {
+            font-size: 0.85rem;
+            color: var(--jaune);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .btn-admin-login {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--jaune);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-admin-login:hover {
+            background: var(--jaune-clair);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(245, 166, 35, 0.3);
+        }
+
+        .btn-admin-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .admin-error {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .admin-error.visible {
+            display: block;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            color: var(--gris-fonce);
+            font-size: 0.8rem;
+        }
+
+        .admin-footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--bordure);
+            color: var(--gris-fonce);
+            font-size: 0.8rem;
+        }
+
+        .admin-footer a {
+            color: var(--jaune);
+            text-decoration: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            .admin-login-card {
+                padding: 1.5rem;
+            }
+
+            .admin-login-header .logo-full {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-login-container">
+        <div class="admin-login-box">
+            <div class="admin-login-header">
+                <div class="logo-full">
+                    <span>VOIR MON PLAT</span><span class="plus">+</span>
+                </div>
+                <div class="admin-badge">
+                    <span>🛡️</span> Espace Admin
+                </div>
+            </div>
+
+            <div class="admin-login-card">
+                <h2>Connexion Admin</h2>
+                <p>Acces reserve aux administrateurs</p>
+
+                <form id="adminLoginForm" class="admin-form">
+                    <div class="form-group">
+                        <label>Email administrateur</label>
+                        <input type="email" id="adminEmail" placeholder="admin@voirmonplat.com" required autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mot de passe</label>
+                        <div class="password-field">
+                            <input type="password" id="adminPassword" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="toggle-pwd" onclick="togglePassword()">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="remember-row">
+                        <div class="remember-check">
+                            <input type="checkbox" id="rememberMe">
+                            <label for="rememberMe">Se souvenir de moi</label>
+                        </div>
+                        <a href="#" class="forgot-link">Mot de passe oublie ?</a>
+                    </div>
+
+                    <div class="admin-error" id="adminError">
+                        Email ou mot de passe incorrect
+                    </div>
+
+                    <button type="submit" class="btn-admin-login" id="loginBtn">
+                        Se connecter
+                    </button>
+                </form>
+
+                <div class="security-note">
+                    <span>🔒</span>
+                    <span>Connexion securise et chiffree</span>
+                </div>
+            </div>
+
+            <div class="admin-footer">
+                <a href="index.html">← Retour au site</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_CREDENTIALS = {
+            email: 'admin@voirmonplat.com',
+            password: 'VoirMonPlat+2026'
+        };
+
+        // Check if already logged in
+        const adminSession = localStorage.getItem('vmp_admin_session');
+        if (adminSession) {
+            try {
+                const session = JSON.parse(adminSession);
+                if (session.loggedIn && session.email === ADMIN_CREDENTIALS.email) {
+                    window.location.href = 'admin-panel.html';
+                }
+            } catch(e) {
+                localStorage.removeItem('vmp_admin_session');
+            }
+        }
+
+        function togglePassword() {
+            const pwd = document.getElementById('adminPassword');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('adminError');
+            const loginBtn = document.getElementById('loginBtn');
+
+            errorDiv.classList.remove('visible');
+
+            if (email !== ADMIN_CREDENTIALS.email || password !== ADMIN_CREDENTIALS.password) {
+                errorDiv.classList.add('visible');
+                document.querySelector('.admin-login-card').classList.add('shake');
+                setTimeout(() => {
+                    document.querySelector('.admin-login-card').classList.remove('shake');
+                }, 300);
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Connexion...';
+
+            const session = {
+                email: email,
+                loggedIn: true,
+                loginDate: new Date().toISOString()
+            };
+
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('vmp_admin_session', JSON.stringify(session));
+            } else {
+                sessionStorage.setItem('vmp_admin_session', JSON.stringify(session));
+            }
+
+            setTimeout(() => {
+                window.location.href = 'admin-panel.html';
+            }, 800);
+        });
+    </script>
+
+</body>
+</html>
