@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creer un compte | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="auth-page">
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">&#127869;</span>
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Creer un compte</h1>
+                <p>Rejoignez des centaines de restaurateurs</p>
+            </div>
+
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="name">Nom complet</label>
+                    <input type="text" id="name" placeholder="Jean Dupont" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="votre@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="restaurant">Nom du restaurant</label>
+                    <input type="text" id="restaurant" placeholder="Mon Restaurant" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Min. 8 caracteres" required minlength="8">
+                        <button type="button" class="toggle-password" onclick="togglePassword('password')">&#128065;</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmer le mot de passe</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" placeholder="Retapez le mot de passe" required minlength="8">
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">&#128065;</button>
+                    </div>
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">J'accepte les <a href="#">conditions generales</a></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">Creer mon compte</button>
+            </form>
+
+            <div id="registerError" class="auth-error" style="display:none;"></div>
+            <div id="registerSuccess" class="auth-success" style="display:none;"></div>
+
+            <div class="auth-footer">
+                <p>Vous avez deja un compte ? <a href="connexion.html">Se connecter</a></p>
+            </div>
+        </div>
+
+        <div class="auth-visual">
+            <div class="auth-visual-content">
+                <span class="auth-visual-icon">&#127869;</span>
+                <h2>VOIR MON PLAT<span class="plus">+</span></h2>
+                <p>La carte qui prend vie</p>
+                <div class="auth-visual-features">
+                    <div class="auth-feature">&#10003; Menu 3D interactif</div>
+                    <div class="auth-feature">&#10003; QR code personnalise</div>
+                    <div class="auth-feature">&#10003; Statistiques en temps reel</div>
+                    <div class="auth-feature">&#10003; Support dedie 24/7</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const restaurant = document.getElementById('restaurant').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('registerError');
+            const successDiv = document.getElementById('registerSuccess');
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Les mots de passe ne correspondent pas.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 8) {
+                errorDiv.textContent = 'Le mot de passe doit faire au moins 8 caracteres.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('vmp_users') || '[]');
+
+            if (users.find(u => u.email === email)) {
+                errorDiv.textContent = 'Un compte avec cet email existe deja.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                restaurant: restaurant,
+                password: btoa(password),
+                createdAt: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            localStorage.setItem('vmp_users', JSON.stringify(users));
+
+            successDiv.textContent = 'Compte cree avec succes ! Redirection...';
+            successDiv.style.display = 'block';
+
+            setTimeout(() => {
+                localStorage.setItem('vmp_session', JSON.stringify({
+                    id: newUser.id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    restaurant: newUser.restaurant
+                }));
+                window.location.href = 'dashboard.html';
+            }, 1500);
+        });
+    </script>
+
+</body>
+</html>

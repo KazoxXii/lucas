@@ -2,271 +2,1198 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>A7 PROD. | Aventure - Folie - Liberté</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOIR MON PLAT+ | La Carte Qui Prend Vie</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --noir: #0a0a0a;
+            --noir-card: #111111;
+            --noir-light: #1a1a1a;
+            --jaune: #f5a623;
+            --jaune-clair: #fbbf24;
+            --jaune-fonce: #d4900a;
+            --blanc: #ffffff;
+            --gris: #999999;
+            --gris-fonce: #555555;
+            --bordure: #222222;
+            --radius: 12px;
+            --radius-lg: 20px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--noir);
+            color: var(--blanc);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        ::selection {
+            background: var(--jaune);
+            color: #000;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--bordure);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            color: var(--blanc);
+        }
+
+        .plus {
+            color: var(--jaune);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--gris);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--jaune);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-login {
+            color: var(--blanc);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-login:hover {
+            color: var(--jaune);
+        }
+
+        .nav-cta {
+            background: var(--jaune);
+            color: #000;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-cta:hover {
+            background: var(--jaune-clair);
+            transform: translateY(-1px);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .mobile-menu-btn span {
+            width: 24px;
+            height: 2px;
+            background: var(--blanc);
+            transition: 0.3s;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 8rem 2rem 4rem;
+            overflow: hidden;
+        }
+
+        .hero-bg-effects {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+        }
+
+        .glow-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--jaune);
+            top: -100px;
+            right: -100px;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .glow-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--jaune-fonce);
+            bottom: -50px;
+            left: -100px;
+            animation: float 15s ease-in-out infinite reverse;
+        }
+
+        .glow-3 {
+            width: 300px;
+            height: 300px;
+            background: var(--jaune-clair);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.06;
+            animation: float 18s ease-in-out infinite 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            color: var(--jaune);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease-out 0.1s both;
+        }
+
+        .yellow-text {
+            color: var(--jaune);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gris);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-block;
+            padding: 0.9rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--jaune);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: var(--jaune-clair);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(245, 166, 35, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--blanc);
+            border: 1px solid var(--bordure);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--jaune);
+        }
+
+        /* HERO STATS */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--gris);
+        }
+
+        /* DEMO PHONE */
+        .demo-phone {
+            position: absolute;
+            right: -150px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            height: 600px;
+            background: var(--noir-card);
+            border-radius: 40px;
+            border: 4px solid var(--bordure);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            animation: phoneFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes phoneFloat {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(-20px); }
+        }
+
+        .phone-screen {
+            position: absolute;
+            inset: 0;
+            background: var(--noir);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .phone-time { font-size: 0.9rem; color: var(--jaune); }
+
+        .phone-camera { width: 60px; height: 60px; border-radius: 50%; background: var(--bordure); }
+
+        .phone-menu {
+            width: 100%;
+            background: var(--noir-card);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bordure);
+        }
+
+        .phone-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: var(--noir);
+            transition: all 0.3s;
+        }
+
+        .phone-menu-item:hover {
+            background: var(--jaune);
+            color: #000;
+        }
+
+        .phone-menu-item:last-child { margin-bottom: 0; }
+
+        .phone-menu-icon {
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            background: var(--bordure);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .phone-qr {
+            width: 100%;
+            height: 150px;
+            background: #fff;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 15px;
+            border: 2px solid var(--jaune);
+            box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3);
+            animation: scanPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3); }
+            50% { box-shadow: 0 4px 40px rgba(245, 166, 35, 0.6); }
+        }
+
+        .phone-qr::before {
+            content: 'SCAN';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .phone-plats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .phone-plat {
+            aspect-ratio: 1;
+            background: var(--noir-card);
+            border-radius: 10px;
+            border: 1px solid var(--bordure);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .phone-plat:nth-child(1) { animation-delay: 0s; }
+        .phone-plat:nth-child(2) { animation-delay: 0.3s; }
+        .phone-plat:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* SECTIONS */
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--gris);
+            font-size: 1.1rem;
+            margin-bottom: 4rem;
+        }
+
+        /* FEATURES */
+        .features {
+            background: var(--noir-card);
+            border-top: 1px solid var(--bordure);
+            border-bottom: 1px solid var(--bordure);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--noir);
+            border: 1px solid var(--bordure);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--jaune);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--jaune);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(245, 166, 35, 0.08);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--gris);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-demo-link {
+            display: inline-block;
+            color: var(--jaune);
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover .feature-demo-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card.feature-link .feature-icon {
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* HOW IT WORKS */
+        .how-it-works {
+            background: var(--noir);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 60px;
+            right: -1.5rem;
+            width: 30px;
+            height: 2px;
+            background: var(--jaune);
+            opacity: 0.3;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            background: var(--jaune);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .step:hover .step-number {
+            background: var(--jaune-clair);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(245, 166, 35, 0.4);
+        }
+
+        .step:hover .step-content h3 {
+            color: var(--jaune);
+        }
+
+        .step-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .step-content p {
+            color: var(--gris);
+            transition: color 0.3s;
+        }
+
+        /*CTA FINAL */
+        .cta-final {
+            background: linear-gradient(180deg, var(--noir) 0%, #111 100%);
+            text-align: center;
+        }
+
+        .cta-final h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .cta-final p {
+            color: var(--gris);
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* FOOTER */
+        .footer {
+            background: #050505;
+            border-top: 1px solid var(--bordure);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            max-width: 300px;
+        }
+
+        .footer-brand .logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .footer-brand .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .footer-brand p {
+            color: var(--gris);
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 4rem;
+        }
+
+        .footer-col h4 {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gris-fonce);
+        }
+
+        .footer-col a {
+            display: block;
+            color: var(--gris);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.3rem 0;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover {
+            color: var(--jaune);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--bordure);
+            color: var(--gris-fonce);
+            font-size: 0.85rem;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .demo-phone {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .step::after {
+                display: none;
+            }
+        }
+
+    </style>
 </head>
 <body>
 
-    <nav class="navbar" id="navbar">
+    <nav class="navbar">
         <div class="nav-container">
-            <a href="#" class="logo">A7 <span>PROD.</span></a>
-            <ul class="nav-links">
-                <li><a href="#hero">Accueil</a></li>
-                <li><a href="#collections">Collections</a></li>
-                <li><a href="#shop">Boutique</a></li>
-                <li><a href="#about">Notre Histoire</a></li>
-            </ul>
-            <div class="nav-icons">
-                <a href="#"><i class="fas fa-search"></i></a>
-                <a href="#"><i class="fas fa-shopping-bag"></i></a>
-                <button class="hamburger" id="hamburger" aria-label="Menu">
-                    <span></span><span></span><span></span>
-                </button>
+            <div class="logo">
+                <span class="logo-icon">&#127869;</span>
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
             </div>
+            <ul class="nav-links">
+                <li><a href="#accueil">Accueil</a></li>
+                <li><a href="#fonctionnalites">Fonctionnalites</a></li>
+                <li><a href="#comment">Comment ca marche</a></li>
+                <li><a href="#tarifs">Tarifs</a></li>
+                <li><a href="#temoignages">Avis</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="connexion.html" class="nav-login">Se connecter</a>
+                <a href="inscription.html" class="nav-cta">Commencer</a>
+            </div>
+            <button class="mobile-menu-btn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
         </div>
     </nav>
 
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="mobile-close" id="mobileClose" aria-label="Fermer">&times;</button>
-        <a href="#hero">Accueil</a>
-        <a href="#collections">Collections</a>
-        <a href="#shop">Boutique</a>
-        <a href="#about">Notre Histoire</a>
-    </div>
-
-    <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">&times;</button>
-        <img src="" alt="Vue agrandie" id="lightboxImg">
-        <span class="lightbox-hint">Pincer pour zoomer</span>
-    </div>
-
-    <header id="hero" class="hero">
-        <div class="hero-img" style="background-image: url('images/hero-collection.jpg')"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content" data-animate="fade-up">
-            <p class="hero-sub">Aventure - Folie - Liberté</p>
-            <h1 class="hero-title">A7 <span>PROD.</span></h1>
-            <p class="hero-tagline">Vivre. Créer. Partager.</p>
-            <a href="#shop" class="btn-main">Découvrir la Collection</a>
+    <section id="accueil" class="hero">
+        <div class="hero-bg-effects">
+            <div class="glow glow-1"></div>
+            <div class="glow glow-2"></div>
+            <div class="glow glow-3"></div>
         </div>
-        <div class="scroll-indicator">
-            <div class="mouse">
-                <div class="wheel"></div>
+        <div class="hero-container">
+            <div class="hero-badge">La carte qui prend vie</div>
+            <h1 class="hero-title">
+                Vos plats,<br>
+                <span class="yellow-text">en 3D</span>
+            </h1>
+            <p class="hero-subtitle">
+                Offrez a vos clients une experience unique : ils scannent, visualisent, choisissent en toute confiance.
+            </p>
+            <div class="hero-ctas">
+                <a href="visualisation.html" class="btn btn-primary">&#128241; Voir un plat en 3D</a>
+                <a href="abonnement.html" class="btn btn-secondary">Prendre un abonnement</a>
             </div>
-            <p>Scroll</p>
-        </div>
-    </header>
-
-    <section class="brand-strip">
-        <div class="marquee">
-            <div class="marquee-inner">
-                <span>A7 PROD.</span>
-                <span class="dot">&#x2022;</span>
-                <span>Aventure</span>
-                <span class="dot">&#x2022;</span>
-                <span>Folie</span>
-                <span class="dot">&#x2022;</span>
-                <span>Liberté</span>
-                <span class="dot">&#x2022;</span>
-                <span>Créer des souvenirs et pas des excuses</span>
-                <span class="dot">&#x2022;</span>
-                <span>No Rules. Just Stories.</span>
-                <span class="dot">&#x2022;</span>
-                <span>A7 PROD.</span>
-                <span class="dot">&#x2022;</span>
-                <span>Aventure</span>
-                <span class="dot">&#x2022;</span>
-                <span>Folie</span>
-                <span class="dot">&#x2022;</span>
-                <span>Liberté</span>
-                <span class="dot">&#x2022;</span>
-                <span>Créer des souvenirs et pas des excuses</span>
-                <span class="dot">&#x2022;</span>
-                <span>No Rules. Just Stories.</span>
-                <span class="dot">&#x2022;</span>
-            </div>
-        </div>
-    </section>
-
-    <section id="collections" class="collections">
-        <div class="section-header" data-animate="fade-up">
-            <h2>Les Collections</h2>
-            <div class="line"></div>
-        </div>
-        <div class="collections-grid">
-            <div class="collection-card" data-animate="fade-up">
-                <div class="collection-img">
-                    <img src="images/hero-collection.jpg" alt="Collection T-Shirts">
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number" data-target="1532">0</span>
+                    <span class="stat-label">Scans realises</span>
                 </div>
-                <div class="collection-info">
-                    <h3>T-Shirts</h3>
-                    <p>12 pièces</p>
+                <div class="stat">
+                    <span class="stat-number" data-target="89">0</span>
+                    <span class="stat-label">Plats affiches</span>
                 </div>
-            </div>
-            <div class="collection-card" data-animate="fade-up" data-delay="0.2">
-                <div class="collection-img">
-                    <img src="images/collection-bottoms.jpg" alt="Collection Bottoms">
-                </div>
-                <div class="collection-info">
-                    <h3>Shorts & Joggings</h3>
-                    <p>18 pièces</p>
-                </div>
-            </div>
-            <div class="collection-card" data-animate="fade-up" data-delay="0.4">
-                <div class="collection-img">
-                    <img src="images/collection-hoodies.jpg" alt="Collection Hoodies">
-                </div>
-                <div class="collection-info">
-                    <h3>Hoodies & Outerwear</h3>
-                    <p>10 pièces</p>
+                <div class="stat">
+                    <span class="stat-number" data-target="27">0</span>
+                    <span class="stat-label">Cartes actives</span>
                 </div>
             </div>
         </div>
-        <p class="swipe-hint">&#8592; Glisser pour voir plus &#8594;</p>
-    </section>
-
-    <section class="statement">
-        <div class="statement-bg" style="background-image: url('images/collection-hoodies.jpg')"></div>
-        <div class="statement-overlay"></div>
-        <div class="statement-content" data-animate="fade-up">
-            <h2>"Des vêtements pensés pour ceux qui préfèrent les chemins de traverse aux routes toutes tracées."</h2>
-            <div class="line gold"></div>
-        </div>
-    </section>
-
-    <section id="shop" class="shop">
-        <div class="section-header" data-animate="fade-up">
-            <h2>Best Sellers</h2>
-            <div class="line"></div>
-        </div>
-
-        <div class="products-row">
-            <div class="product-card" data-animate="fade-up">
-                <div class="product-flip">
-                    <div class="flip-front">
-                        <img src="images/tshirt-cream.jpg" alt="T-Shirt Créer des Souvenirs">
+        <div class="demo-phone">
+            <div class="phone-screen">
+                <div class="phone-header">
+                    <span class="phone-time">14:32</span>
+                    <div class="phone-camera"></div>
+                </div>
+                <div class="phone-menu">
+                    <div class="phone-menu-item">
+                        <div class="phone-menu-icon">🍔</div>
+                        <span>Burger Maison</span>
                     </div>
-                    <div class="flip-back">
-                        <div class="flip-content">
-                            <h4>Créer des Souvenirs</h4>
-                            <p>T-Shirt Oversize Beige</p>
-                            <span class="price">49,99 €</span>
-                            <button class="btn-add">Ajouter au panier</button>
+                    <div class="phone-menu-item">
+                        <div class="phone-menu-icon">🍕</div>
+                        <span>Pizza Truffe</span>
+                    </div>
+                    <div class="phone-menu-item">
+                        <div class="phone-menu-icon">🍰</div>
+                        <span>Tiramisu</span>
+                    </div>
+                </div>
+                <div class="phone-qr"></div>
+                <div class="phone-plats">
+                    <div class="phone-plat"></div>
+                    <div class="phone-plat"></div>
+                    <div class="phone-plat"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fonctionnalites" class="features">
+        <div class="section-container">
+            <h2 class="section-title">Une experience <span class="yellow-text">unique</span></h2>
+            <p class="section-subtitle">Tout ce qu'il faut pour sublimer votre carte</p>
+            <div class="features-grid">
+                <div class="feature-card feature-link" onclick="window.location.href='visualisation.html'">
+                    <div class="feature-icon">&#127912;</div>
+                    <h3>Visualisation 3D</h3>
+                    <p>Des plats en 3D realistes ou standards</p>
+                    <span class="feature-demo-link">Tester la 3D &#8594;</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128247;</div>
+                    <h3>Scannez</h3>
+                    <p>Le client scanne le QR code avec son telephone</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128200;</div>
+                    <h3>Plus de ventes</h3>
+                    <p>Augmentez l'engagement et le panier moyen</p>
+                </div>
+                <div class="feature-card" onclick="window.location.href='abonnement.html'">
+                    <div class="feature-icon">&#128467;</div>
+                    <h3>Abonnement flexible</h3>
+                    <p>Des formules adaptees aux petits comme aux grands</p>
+                    <span class="feature-demo-link">Voir les tarifs &#8594;</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="comment" class="how-it-works">
+        <div class="section-container">
+            <h2 class="section-title">Comment ca <span class="yellow-text">marche</span> ?</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Scannez</h3>
+                        <p>Le client scanne le QR code de votre menu</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Visualisez</h3>
+                        <p>Les plats apparaissent en 3D sur son ecran</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Choisissez</h3>
+                        <p>Le client choisit en toute confiance et se regale</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tarifs" class="pricing">
+        <div class="section-container">
+            <h2 class="section-title">Nos offres <span class="yellow-text">abonnement</span></h2>
+            <p class="section-subtitle">Des formules adaptees a toutes les tailles d'entreprise</p>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <div class="price-header">
+                        <h3>Starter</h3>
+                        <div class="price">
+                            <span class="price-amount">29&euro;</span>
+                            <span class="price-period">/mois</span>
+                        </div>
+                    </div>
+                    <ul class="price-features">
+                        <li>Jusqu'a 15 plats</li>
+                        <li>Visualisation 3D</li>
+                        <li>QR code personnalise</li>
+                        <li>Support par email</li>
+                    </ul>
+                    <a href="abonnement.html" class="btn btn-outline">Commencer</a>
+                </div>
+                <div class="price-card popular">
+                    <div class="popular-badge">&#9733; Populaire</div>
+                    <div class="price-header">
+                        <h3>Pro</h3>
+                        <div class="price">
+                            <span class="price-amount">69&euro;</span>
+                            <span class="price-period">/mois</span>
+                        </div>
+                    </div>
+                    <ul class="price-features">
+                        <li>Jusqu'a 50 plats</li>
+                        <li>Visualisation 3D realiste</li>
+                        <li>Statistiques detaillees</li>
+                        <li>Modifications illimitees</li>
+                        <li>Support prioritaire</li>
+                    </ul>
+                    <a href="abonnement.html" class="btn btn-primary">Commencer</a>
+                </div>
+                <div class="price-card">
+                    <div class="price-header">
+                        <h3>Premium</h3>
+                        <div class="price">
+                            <span class="price-amount">149&euro;</span>
+                            <span class="price-period">/mois</span>
+                        </div>
+                    </div>
+                    <ul class="price-features">
+                        <li>Plats illimites</li>
+                        <li>Cartes multiples</li>
+                        <li>Visualisation 3D avancee</li>
+                        <li>Personnalisation avancee</li>
+                        <li>Accompagnement dedie</li>
+                    </ul>
+                    <a href="abonnement.html" class="btn btn-outline">Commencer</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="temoignages" class="testimonials">
+        <div class="section-container">
+            <h2 class="section-title">Ce que disent <span class="yellow-text">nos clients</span></h2>
+            <p class="section-subtitle">Des centaines de restaurateurs nous font confiance</p>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p>"Nos clients adorent visualiser les plats avant de commander. Le panier moyen a augmente de 23%."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MB</div>
+                        <div>
+                            <strong>Marco Bellini</strong>
+                            <span>La Trattoria, Lyon</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p>"Installation en 24h, interface simple. Mes clients etrangers adorent le multilingue."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SD</div>
+                        <div>
+                            <strong>Sophie Durand</strong>
+                            <span>Le Bistrot Parisien, Paris</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <p>"Le dashboard est incroyable. Je vois exactement quels plats attirent le plus mes clients."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">AK</div>
+                        <div>
+                            <strong>Ahmed Khelifi</strong>
+                            <span>Food Truck El Gusto, Marseille</span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="product-card" data-animate="fade-up" data-delay="0.2">
-                <div class="product-flip">
-                    <div class="flip-front">
-                        <img src="images/tshirt-beige.jpg" alt="T-Shirt Pas Besoin de Plan">
-                    </div>
-                    <div class="flip-back">
-                        <div class="flip-content">
-                            <h4>Pas Besoin de Plan</h4>
-                            <p>T-Shirt Oversize Kaki</p>
-                            <span class="price">49,99 €</span>
-                            <button class="btn-add">Ajouter au panier</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="product-card" data-animate="fade-up" data-delay="0.4">
-                <div class="product-flip">
-                    <div class="flip-front">
-                        <img src="images/tshirt-black.jpg" alt="T-Shirt Go Far Stay Wild">
-                    </div>
-                    <div class="flip-back">
-                        <div class="flip-content">
-                            <h4>Go Far. Stay Wild.</h4>
-                            <p>T-Shirt Oversize Noir</p>
-                            <span class="price">49,99 €</span>
-                            <button class="btn-add">Ajouter au panier</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <p class="swipe-hint">&#8592; Glisser pour voir plus &#8594;</p>
-
-        <div class="shop-cta" data-animate="fade-up">
-            <a href="#" class="btn-main">Voir toute la boutique</a>
         </div>
     </section>
 
-    <section id="about" class="about">
-        <div class="about-grid">
-            <div class="about-img" data-animate="fade-right">
-                <img src="images/collection-bottoms.jpg" alt="A7 PROD Collection">
-            </div>
-            <div class="about-text" data-animate="fade-left">
-                <h2>L'Aventure commence là où le plan s'arrête.</h2>
-                <div class="line gold"></div>
-                <p>A7 PROD., c'est plus qu'une marque. C'est un mode de vie pour ceux qui osent. Chaque pièce est conçue pour accompagner vos plus grandes folies, vos voyages sans destination, vos nuits sous les étoiles.</p>
-                <p>Nous créons des vêtements qui racontent une histoire — la vôtre.</p>
-                <div class="about-icons">
-                    <div class="icon-item">
-                        <i class="fas fa-mountain"></i>
-                        <span>Aventure</span>
-                    </div>
-                    <div class="icon-item">
-                        <i class="fas fa-globe"></i>
-                        <span>Explorer</span>
-                    </div>
-                    <div class="icon-item">
-                        <i class="fas fa-fire"></i>
-                        <span>Folie</span>
-                    </div>
-                </div>
-            </div>
+    <section class="cta-final">
+        <div class="section-container">
+            <h2>Pret a sublimer <span class="yellow-text">votre carte</span> ?</h2>
+            <p>Rejoignez des centaines de restaurateurs qui ont transforme leur menu en experience immersive.</p>
+            <a href="abonnement.html" class="btn btn-primary btn-lg">Demarrer maintenant</a>
         </div>
     </section>
 
-    <footer>
-        <div class="footer-top">
+    <footer class="footer">
+        <div class="footer-container">
             <div class="footer-brand">
-                <h3>A7 <span>PROD.</span></h3>
-                <p>Plus qu'une marque, un mode de vie.</p>
+                <span class="logo-icon">&#127869;</span>
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+                <p>La carte qui prend vie.</p>
             </div>
             <div class="footer-links">
-                <div class="footer-col">
-                    <h4>Boutique</h4>
-                    <a href="#">T-Shirts</a>
-                    <a href="#">Hoodies</a>
-                    <a href="#">Shorts</a>
-                    <a href="#">Joggings</a>
-                    <a href="#">Accessories</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Aide</h4>
-                    <a href="#">Livraison</a>
-                    <a href="#">Retours</a>
-                    <a href="#">Tailles</a>
-                    <a href="#">Contact</a>
-                </div>
-                <div class="footer-col">
-                    <h4>Suivez-nous</h4>
-                    <div class="socials">
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-tiktok"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
+            <div class="footer-col">
+                <h4>Produit</h4>
+                <a href="#fonctionnalites">Fonctionnalites</a>
+                <a href="abonnement.html">Tarifs</a>
+                <a href="visualisation.html">Demo</a>
+            </div>
+            <div class="footer-col">
+                <h4>Entreprise</h4>
+                <a href="#">A propos</a>
+                <a href="#">Blog</a>
+                <a href="#">Carriere</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#">Contact</a>
+                <a href="#">FAQ</a>
+                <a href="#">Mentions legales</a>
+            </div>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 A7 PROD. Tous droits réservés.</p>
-            <p class="credit">Site réalisé par <a href="https://maltyshop.vercel.app/" target="_blank">MaltyShop</a></p>
+            <p>&copy; 2026 VOIR MON PLAT+. Tous droits reserves.</p>
         </div>
     </footer>
 
-    <script src="js/main.js"></script>
+    <script>
+        // Compteur anime pour les stats hero
+        const counters = document.querySelectorAll('.stat-number');
+        const speed = 80;
+
+        const animateCounters = () => {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText.replace(/\s/g, '');
+                const inc = target / speed;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc).toLocaleString('fr-FR');
+                    setTimeout(animateCounters, 20);
+                } else {
+                    counter.innerText = target.toLocaleString('fr-FR');
+                }
+            });
+        };
+
+        // Lance le compteur quand la section est visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const heroStats = document.querySelector('.hero-stats');
+        if (heroStats) observer.observe(heroStats);
+
+        // Animation au scroll
+        const animateOnScroll = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    animateOnScroll.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.feature-card, .step, .price-card, .testimonial-card').forEach(el => {
+            el.style.opacity = '0';
+            animateOnScroll.observe(el);
+        });
+
+        // Menu mobile
+        const mobileBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        if (mobileBtn && navLinks) {
+            mobileBtn.addEventListener('click', () => {
+                navLinks.classList.toggle('show');
+                mobileBtn.classList.toggle('active');
+            });
+
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('show');
+                    mobileBtn.classList.remove('active');
+                });
+            });
+        }
+
+        // Navbar scroll
+        const navbar = document.querySelector('.navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(10, 10, 10, 0.95)';
+            } else {
+                navbar.style.background = 'rgba(10, 10, 10, 0.85)';
+            }
+        });
+
+        // Smooth scroll pour les ancres
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Effet de hover sur les cartes de features
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px)';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+        });
+
+        // Animation des etapes
+        document.querySelectorAll('.step').forEach((step, index) => {
+            step.style.transitionDelay = `${index * 0.2}s`;
+        });
+
+        // Ajouter la classe 'show' pour le menu mobile via CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .nav-links.show {
+                right: 0;
+            }
+
+            .mobile-menu-btn.active span:nth-child(1) {
+                transform: translateY(7px) rotate(45deg);
+            }
+
+            .mobile-menu-btn.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .mobile-menu-btn.active span:nth-child(3) {
+                transform: translateY(-7px) rotate(-45deg);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
 </body>
 </html>

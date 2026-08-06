@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visualisation 3D | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; background: #0a0a0a; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; }
+        #viewerContainer { position: fixed; inset: 0; }
+        canvas { display: block; }
+        .viewer-topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 24px; background: rgba(10,10,10,0.8); backdrop-filter: blur(10px);
+            border-bottom: 1px solid #222;
+        }
+        .viewer-topbar .logo-text { font-size: 1.1rem; font-weight: 800; }
+        .viewer-dishes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .dish-pill {
+            padding: 8px 16px; border-radius: 100px; border: 1px solid #222;
+            background: #111; color: #999; cursor: pointer; font-size: 0.85rem;
+            transition: all 0.3s; user-select: none;
+        }
+        .dish-pill:hover { border-color: #f5a623; color: #fff; }
+        .dish-pill.active { background: #f5a623; color: #000; border-color: #f5a623; font-weight: 600; }
+        .viewer-controls {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 20; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+        }
+        .mode-toggle {
+            display: flex; background: #111; border: 1px solid #222; border-radius: 100px; padding: 4px; overflow: hidden;
+        }
+        .mode-btn {
+            padding: 10px 20px; border: none; background: transparent; color: #999;
+            cursor: pointer; font-size: 0.9rem; border-radius: 100px; font-family: inherit; transition: all 0.3s;
+        }
+        .mode-btn.active { background: #f5a623; color: #000; font-weight: 600; }
+        .viewer-actions { position: fixed; bottom: 20px; right: 20px; z-index: 20; display: flex; gap: 8px; }
+        .icon-btn {
+            width: 48px; height: 48px; border-radius: 50%; border: 1px solid #222; background: #111;
+            color: #fff; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .icon-btn:hover { border-color: #f5a623; }
+        .info-badge {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 20; background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.3);
+            color: #f5a623; padding: 6px 18px; border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+        }
+        .dish-name-badge {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            z-index: 20; background: rgba(10,10,10,0.9); border: 1px solid #333;
+            color: #fff; padding: 12px 28px; border-radius: 14px; font-size: 1.2rem; font-weight: 700;
+            text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+        .dish-name-badge span { display: block; font-size: 0.8rem; color: #999; font-weight: 400; margin-top: 4px; }
+        .scan-hint {
+            position: fixed; top: 140px; left: 50%; transform: translateX(-50%); z-index: 20;
+            color: #555; font-size: 0.75rem; display: flex; align-items: center; gap: 6px;
+        }
+        @media (max-width: 768px) {
+            .viewer-topbar { flex-direction: column; gap: 10px; padding: 12px 16px; }
+            .dish-pill { font-size: 0.75rem; padding: 7px 12px; }
+            .dish-name-badge { top: 120px; left: 16px; right: 16px; transform: none; font-size: 1rem; }
+            .scan-hint { top: 175px; }
+            .viewer-actions { right: 16px; bottom: 20px; }
+            .icon-btn { width: 42px; height: 42px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="viewerContainer"></div>
+
+    <div class="viewer-topbar">
+        <a href="index.html" style="color:#fff;text-decoration:none;">
+            <span class="logo-icon">&#127869;</span> <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+        </a>
+        <div class="viewer-dishes" id="dishSelector"></div>
+    </div>
+
+    <div class="dish-name-badge" id="dishInfo">Burger Maison<span>Glissez pour faire tourner</span></div>
+    <div class="scan-hint">&#128241; Visible sur votre telephone - scannez le QR pour ouvrir</div>
+
+    <div class="viewer-controls">
+        <div class="mode-toggle">
+            <button class="mode-btn" id="modeNormalBtn" onclick="setMode('normal')">3D normal</button>
+            <button class="mode-btn active" id="modeRealBtn" onclick="setMode('real')">Realiste</button>
+        </div>
+    </div>
+
+    <div class="viewer-actions">
+        <button class="icon-btn" id="resetView" title="Reinitialiser la vue">&#8635;</button>
+        <button class="icon-btn" id="autoRotateBtn" title="Rotation auto">&#10227;</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="viewer3d.js"></script>
+</body>
+</html>

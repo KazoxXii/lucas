@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Se connecter | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="auth-page">
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">📱</span>
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Se connecter</h1>
+                <p>Acceda a votre espace client premium</p>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="votre@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Votre mot de passe" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('password')">👁️</button>
+                    </div>
+                </div>
+
+                <div class="form-row-between">
+                    <div class="form-check">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">Se souvenir de moi</label>
+                    </div>
+                    <a href="mot-de-passe-oublie.html" class="form-link">Mot de passe oublie ?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+            </form>
+
+            <div id="loginError" class="auth-error" style="display:none;"></div>
+
+            <div class="auth-footer">
+                <p>Pas encore de compte ? <a href="inscription.html">Creer un compte</a></p>
+            </div>
+        </div>
+
+        <div class="auth-visual">
+            <div class="auth-visual-content">
+                <span class="auth-visual-icon">📱</span>
+                <h2>VOIR MON PLAT<span class="plus">+</span></h2>
+                <p>La carte qui prend vie</p>
+                <div class="auth-visual-features">
+                    <div class="auth-feature">✅ Menu 3D interactif</div>
+                    <div class="auth-feature">✅ QR code personnalise</div>
+                    <div class="auth-feature">✅ Statistiques en temps reel</div>
+                    <div class="auth-feature">✅ Support dedie 24/7</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // Vérifier si l'utilisateur est déjà connecté
+        const session = localStorage.getItem('vmp_session');
+        if (session) {
+            window.location.href = 'dashboard.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            errorDiv.style.display = 'none';
+
+            const users = JSON.parse(localStorage.getItem('vmp_users') || '[]');
+            const user = users.find(u => u.email === email);
+
+            if (!user) {
+                errorDiv.textContent = 'Aucun compte trouve avec cet email.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (atob(user.password) !== password) {
+                errorDiv.textContent = 'Mot de passe incorrect.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Sauvegarder la session utilisateur
+            localStorage.setItem('vmp_session', JSON.stringify({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                restaurant: user.restaurant
+            }));
+
+            // Redirection vers le dashboard client
+            window.location.href = 'dashboard.html';
+        });
+    </script>
+
+</body>
+</html>

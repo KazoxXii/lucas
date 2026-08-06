@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mot de passe oublie | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="auth-page">
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">&#127869;</span>
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div id="step-email">
+                <div class="auth-header">
+                    <h1>Mot de passe oublie ?</h1>
+                    <p>Entrez votre email pour recevoir un lien de reinitialisation</p>
+                </div>
+
+                <form id="forgotForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="votre@email.com" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Envoyer le lien</button>
+                </form>
+
+                <div id="forgotError" class="auth-error" style="display:none;"></div>
+                <div id="forgotSuccess" class="auth-success" style="display:none;"></div>
+
+                <div class="auth-footer">
+                    <p><a href="connexion.html">&#8592; Retour a la connexion</a></p>
+                </div>
+            </div>
+
+            <div id="step-reset" style="display:none;">
+                <div class="auth-header">
+                    <h1>Nouveau mot de passe</h1>
+                    <p>Choisissez un nouveau mot de passe pour votre compte</p>
+                </div>
+
+                <form id="resetForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="newPassword">Nouveau mot de passe</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="newPassword" placeholder="Min. 8 caracteres" required minlength="8">
+                            <button type="button" class="toggle-password" onclick="togglePassword('newPassword')">&#128065;</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmNewPassword">Confirmer le mot de passe</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirmNewPassword" placeholder="Retapez le mot de passe" required minlength="8">
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirmNewPassword')">&#128065;</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Reinitialiser le mot de passe</button>
+                </form>
+
+                <div id="resetError" class="auth-error" style="display:none;"></div>
+                <div id="resetSuccess" class="auth-success" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="auth-visual">
+            <div class="auth-visual-content">
+                <span class="auth-visual-icon">&#127869;</span>
+                <h2>VOIR MON PLAT<span class="plus">+</span></h2>
+                <p>La carte qui prend vie</p>
+                <div class="auth-visual-features">
+                    <div class="auth-feature">&#10003; Menu 3D interactif</div>
+                    <div class="auth-feature">&#10003; QR code personnalise</div>
+                    <div class="auth-feature">&#10003; Statistiques en temps reel</div>
+                    <div class="auth-feature">&#10003; Support dedie 24/7</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        document.getElementById('forgotForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const errorDiv = document.getElementById('forgotError');
+            const successDiv = document.getElementById('forgotSuccess');
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            const users = JSON.parse(localStorage.getItem('vmp_users') || '[]');
+            const user = users.find(u => u.email === email);
+
+            if (!user) {
+                errorDiv.textContent = 'Aucun compte trouve avec cet email.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            localStorage.setItem('vmp_reset_email', email);
+
+            successDiv.textContent = 'Email de reinitialisation envoye ! (simule)';
+            successDiv.style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('step-email').style.display = 'none';
+                document.getElementById('step-reset').style.display = 'block';
+            }, 1500);
+        });
+
+        document.getElementById('resetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            const errorDiv = document.getElementById('resetError');
+            const successDiv = document.getElementById('resetSuccess');
+
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            if (newPassword !== confirmNewPassword) {
+                errorDiv.textContent = 'Les mots de passe ne correspondent pas.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                errorDiv.textContent = 'Le mot de passe doit faire au moins 8 caracteres.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const email = localStorage.getItem('vmp_reset_email');
+            const users = JSON.parse(localStorage.getItem('vmp_users') || '[]');
+            const userIndex = users.findIndex(u => u.email === email);
+
+            if (userIndex === -1) {
+                errorDiv.textContent = 'Erreur : compte non trouve.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            users[userIndex].password = btoa(newPassword);
+            localStorage.setItem('vmp_users', JSON.stringify(users));
+            localStorage.removeItem('vmp_reset_email');
+
+            successDiv.textContent = 'Mot de passe reinitialise avec succes ! Redirection...';
+            successDiv.style.display = 'block';
+
+            setTimeout(() => {
+                window.location.href = 'connexion.html';
+            }, 2000);
+        });
+    </script>
+
+</body>
+</html>

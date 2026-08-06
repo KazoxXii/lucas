@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choisir un abonnement | VOIR MON PLAT+</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ABONNEMENT PAGE */
+        .abonnement-hero {
+            padding: 8rem 2rem 3rem;
+            text-align: center;
+            background: linear-gradient(180deg, #0a0a0a 0%, #111 100%);
+        }
+
+        .abonnement-hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 0.75rem;
+        }
+
+        .abonnement-hero p {
+            color: var(--gris);
+            font-size: 1.15rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gris);
+            font-size: 0.85rem;
+        }
+
+        .trust-badge-icon {
+            font-size: 1.1rem;
+        }
+
+        /* PRICING SECTION */
+        .abonnement-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem 6rem;
+        }
+
+        .pricing-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .pricing-toggle span {
+            color: var(--gris);
+            font-size: 0.95rem;
+        }
+
+        .pricing-toggle span.active {
+            color: var(--blanc);
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: var(--bordure);
+            border-radius: 13px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: var(--jaune);
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.annual::after {
+            transform: translateX(24px);
+        }
+
+        .toggle-switch.annual {
+            background: var(--jaune);
+        }
+
+        .save-badge {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* GRID */
+        .abonnement-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        /* CARDS */
+        .abonnement-card {
+            background: var(--noir-card);
+            border: 1px solid var(--bordure);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .abonnement-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(245, 166, 35, 0.3);
+        }
+
+        .abonnement-card.popular {
+            border-color: var(--jaune);
+            box-shadow: 0 0 50px rgba(245, 166, 35, 0.12);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--jaune);
+            color: #000;
+            padding: 0.4rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .abonnement-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-desc {
+            color: var(--gris);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-price {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-price .amount {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--jaune);
+        }
+
+        .card-price .currency {
+            font-size: 1.2rem;
+            color: var(--gris);
+            vertical-align: super;
+        }
+
+        .card-price .period {
+            color: var(--gris);
+            font-size: 0.95rem;
+        }
+
+        .card-price .monthly-amount {
+            display: block;
+            color: var(--gris-fonce);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .card-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+            flex: 1;
+        }
+
+        .card-features li {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--bordure);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-features li:last-child {
+            border-bottom: none;
+        }
+
+        .card-features .check {
+            color: #22c55e;
+            font-weight: 700;
+        }
+
+        .card-features .cross {
+            color: #666;
+        }
+
+        .abonnement-card .btn {
+            width: 100%;
+        }
+
+        /* CHECKOUT SECTION */
+        .checkout-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+            display: none;
+        }
+
+        .checkout-section.active {
+            display: block;
+        }
+
+        .checkout-steps {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .checkout-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gris);
+            font-size: 0.9rem;
+        }
+
+        .checkout-step.active {
+            color: var(--jaune);
+        }
+
+        .checkout-step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bordure);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .checkout-step.active .checkout-step-num {
+            background: var(--jaune);
+            color: #000;
+        }
+
+        .checkout-step.completed .checkout-step-num {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .checkout-form {
+            background: var(--noir-card);
+            border: 1px solid var(--bordure);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+        }
+
+        .checkout-form h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkout-summary {
+            background: var(--noir-card);
+            border: 1px solid var(--bordure);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            position: sticky;
+            top: 100px;
+            align-self: start;
+        }
+
+        .checkout-summary h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--bordure);
+        }
+
+        .summary-plan {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--bordure);
+        }
+
+        .summary-plan-name {
+            font-weight: 600;
+        }
+
+        .summary-plan-price {
+            color: var(--jaune);
+            font-weight: 700;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .summary-total span:first-child {
+            font-weight: 600;
+        }
+
+        .summary-total span:last-child {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--jaune);
+        }
+
+        /* FORM STYLES */
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-method {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--noir);
+            border: 2px solid var(--bordure);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .payment-method:hover {
+            border-color: var(--gris-fonce);
+        }
+
+        .payment-method.selected {
+            border-color: var(--jaune);
+            background: rgba(245, 166, 35, 0.05);
+        }
+
+        .payment-method-icon {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .payment-method-name {
+            font-size: 0.75rem;
+            color: var(--gris);
+        }
+
+        .card-input-wrapper {
+            position: relative;
+        }
+
+        .card-input-wrapper .card-icons {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .card-input-wrapper .card-brand {
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .card-input-wrapper .card-brand.active {
+            opacity: 1;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            color: #22c55e;
+            font-size: 0.85rem;
+        }
+
+        .secure-badge-icon {
+            font-size: 1rem;
+        }
+
+        /* SUCCESS */
+        .checkout-success {
+            text-align: center;
+            padding: 3rem 2rem;
+            display: none;
+        }
+
+        .checkout-success.active {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            animation: successPop 0.5s ease;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .checkout-success h2 {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .checkout-success p {
+            color: var(--gris);
+            font-size: 1.1rem;
+            max-width: 400px;
+            margin: 0 auto 2rem;
+        }
+
+        .success-details {
+            background: var(--noir-card);
+            border: 1px solid var(--bordure);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            max-width: 400px;
+            margin: 0 auto 2rem;
+            text-align: left;
+        }
+
+        .success-details .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .success-details .row span:first-child {
+            color: var(--gris);
+        }
+
+        .success-details .row span:last-child {
+            font-weight: 600;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .abonnement-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-summary {
+                position: static;
+                order: -1;
+            }
+
+            .payment-methods {
+                flex-wrap: wrap;
+            }
+
+            .payment-method {
+                min-width: calc(50% - 0.5rem);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .abonnement-hero {
+                padding: 7rem 1.5rem 2rem;
+            }
+
+            .abonnement-section {
+                padding: 2rem 1.5rem 4rem;
+            }
+
+            .checkout-section {
+                padding: 0 1.5rem 4rem;
+            }
+
+            .trust-badges {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+            </a>
+            <div class="nav-actions">
+                <a href="connexion.html" class="nav-login">Connexion</a>
+                <a href="inscription.html" class="nav-cta">Essai gratuit</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="abonnement-hero">
+        <h1>Choisissez votre <span class="yellow-text">abonnement</span></h1>
+        <p>3 formules adaptees a chaque type de restaurant. Sans engagement.</p>
+        <div class="trust-badges">
+            <div class="trust-badge">
+                <span class="trust-badge-icon">🔒</span>
+                <span>Paiement securise</span>
+            </div>
+            <div class="trust-badge">
+                <span class="trust-badge-icon">❌</span>
+                <span>Sans engagement</span>
+            </div>
+            <div class="trust-badge">
+                <span class="trust-badge-icon">⚡</span>
+                <span>Activation immediate</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING CARDS -->
+    <section class="abonnement-section" id="pricingSection">
+        <div class="pricing-toggle">
+            <span class="active">Mensuel</span>
+            <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"></div>
+            <span>Annuel</span>
+            <span class="save-badge">-20%</span>
+        </div>
+
+        <div class="abonnement-grid">
+            <!-- STARTER -->
+            <div class="abonnement-card" data-plan="starter" data-monthly="29" data-annual="23">
+                <div class="card-icon">🍽️</div>
+                <h3>Starter</h3>
+                <p class="card-desc">Pour les restaurants qui debutent</p>
+                <div class="card-price">
+                    <span class="amount"><span class="currency">€</span><span class="price-value">29</span></span>
+                    <span class="period">/mois</span>
+                    <span class="monthly-amount">Facture mensuelle</span>
+                </div>
+                <ul class="card-features">
+                    <li><span class="check">✓</span> Jusqu'a 15 plats</li>
+                    <li><span class="check">✓</span> Visualisation 3D standard</li>
+                    <li><span class="check">✓</span> QR Code personnalise</li>
+                    <li><span class="check">✓</span> Support par email</li>
+                    <li><span class="cross">-</span> Statistiques avancees</li>
+                    <li><span class="cross">-</span> Cartes multiples</li>
+                </ul>
+                <button class="btn btn-outline" onclick="selectPlan('starter', 29, 'Starter')">Choisir Starter</button>
+            </div>
+
+            <!-- PRO -->
+            <div class="abonnement-card popular" data-plan="pro" data-monthly="69" data-annual="55">
+                <div class="popular-badge">⭐ Le plus populaire</div>
+                <div class="card-icon">🚀</div>
+                <h3>Pro</h3>
+                <p class="card-desc">Pour les restaurants ambitieux</p>
+                <div class="card-price">
+                    <span class="amount"><span class="currency">€</span><span class="price-value">69</span></span>
+                    <span class="period">/mois</span>
+                    <span class="monthly-amount">Facture mensuelle</span>
+                </div>
+                <ul class="card-features">
+                    <li><span class="check">✓</span> Jusqu'a 50 plats</li>
+                    <li><span class="check">✓</span> Visualisation 3D realiste</li>
+                    <li><span class="check">✓</span> QR Code personnalise</li>
+                    <li><span class="check">✓</span> Support prioritaire</li>
+                    <li><span class="check">✓</span> Statistiques detaillees</li>
+                    <li><span class="cross">-</span> Cartes multiples</li>
+                </ul>
+                <button class="btn btn-primary" onclick="selectPlan('pro', 69, 'Pro')">Choisir Pro</button>
+            </div>
+
+            <!-- PREMIUM -->
+            <div class="abonnement-card" data-plan="premium" data-monthly="149" data-annual="119">
+                <div class="card-icon">👑</div>
+                <h3>Premium</h3>
+                <p class="card-desc">Pour les groupes et grandes territoires</p>
+                <div class="card-price">
+                    <span class="amount"><span class="currency">€</span><span class="price-value">149</span></span>
+                    <span class="period">/mois</span>
+                    <span class="monthly-amount">Facture mensuelle</span>
+                </div>
+                <ul class="card-features">
+                    <li><span class="check">✓</span> Plats illimites</li>
+                    <li><span class="check">✓</span> Visualisation 3D ultra realiste</li>
+                    <li><span class="check">✓</span> QR Code personnalise</li>
+                    <li><span class="check">✓</span> Support dedie 24/7</li>
+                    <li><span class="check">✓</span> Statistiques avancees</li>
+                    <li><span class="check">✓</span> Cartes multiples</li>
+                </ul>
+                <button class="btn btn-outline" onclick="selectPlan('premium', 149, 'Premium')">Choisir Premium</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHECKOUT -->
+    <section class="checkout-section" id="checkoutSection">
+        <div class="checkout-steps">
+            <div class="checkout-step active" id="step1">
+                <span class="checkout-step-num">1</span>
+                <span>Compte</span>
+            </div>
+            <div class="checkout-step" id="step2">
+                <span class="checkout-step-num">2</span>
+                <span>Paiement</span>
+            </div>
+            <div class="checkout-step" id="step3">
+                <span class="checkout-step-num">3</span>
+                <span>Confirmation</span>
+            </div>
+        </div>
+
+        <div class="checkout-grid">
+            <!-- FORM -->
+            <div class="checkout-form" id="checkoutForm">
+                <h3>📝 Informations du compte</h3>
+                <form id="subscriptionForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="subName">Nom complet</label>
+                        <input type="text" id="subName" placeholder="Jean Dupont" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subEmail">Email</label>
+                        <input type="email" id="subEmail" placeholder="jean@restaurant.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subRestaurant">Nom du restaurant</label>
+                        <input type="text" id="subRestaurant" placeholder="Le Petit Bistrot" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subPhone">Telephone</label>
+                        <input type="tel" id="subPhone" placeholder="+33 6 12 34 56 78" required>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <h3>💳 Moyen de paiement</h3>
+                    </div>
+
+                    <div class="payment-methods">
+                        <div class="payment-method selected" onclick="selectPaymentMethod(this, 'card')">
+                            <span class="payment-method-icon">💳</span>
+                            <span class="payment-method-name">CB / Visa</span>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod(this, 'paypal')">
+                            <span class="payment-method-icon">🅿️</span>
+                            <span class="payment-method-name">PayPal</span>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod(this, 'apple')">
+                            <span class="payment-method-icon">🍎</span>
+                            <span class="payment-method-name">Apple Pay</span>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod(this, 'google')">
+                            <span class="payment-method-icon">📱</span>
+                            <span class="payment-method-name">Google Pay</span>
+                        </div>
+                    </div>
+
+                    <div id="cardPaymentFields">
+                        <div class="form-group">
+                            <label for="subCard">Numero de carte</label>
+                            <div class="card-input-wrapper">
+                                <input type="text" id="subCard" placeholder="4242 4242 4242 4242" maxlength="19" required>
+                                <div class="card-icons">
+                                    <span class="card-brand" id="visaIcon">💳</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="subExp">Expiration</label>
+                                <input type="text" id="subExp" placeholder="MM/AA" maxlength="5" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="subCvc">CVC</label>
+                                <input type="text" id="subCvc" placeholder="123" maxlength="4" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="secure-badge">
+                        <span class="secure-badge-icon">🔒</span>
+                        <span>Paiement 100% securise et chiffre</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full" style="margin-top: 1.5rem;">
+                        Confirmer et payer <span id="submitPrice">€69</span>/mois
+                    </button>
+
+                    <p style="text-align: center; font-size: 0.8rem; color: var(--gris-fonce); margin-top: 1rem;">
+                        En confirmant, vous acceptez nos <a href="#" style="color: var(--jaune);">CGV</a> et <a href="#" style="color: var(--jaune);">Politique de confidentialite</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="checkout-summary">
+                <h3>📋 Recapitulatif</h3>
+                <div class="summary-plan">
+                    <span class="summary-plan-name" id="summaryPlan">Plan Pro</span>
+                    <span class="summary-plan-price" id="summaryPrice">€69/mois</span>
+                </div>
+                <div class="summary-plan">
+                    <span>Frequence</span>
+                    <span id="summaryFreq">Mensuelle</span>
+                </div>
+                <div class="summary-plan">
+                    <span>Essai gratuit</span>
+                    <span style="color: #22c55e;">14 jours</span>
+                </div>
+                <div class="summary-total">
+                    <span>Total aujourd'hui</span>
+                    <span id="summaryTotal">€0</span>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--gris-fonce); margin-top: 1rem; text-align: center;">
+                    ⚡ Activation immediate apres confirmation
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SUCCESS -->
+    <section class="checkout-success" id="checkoutSuccess">
+        <span class="success-icon">✅</span>
+        <h2>Bienvenue dans <span class="yellow-text">VOIR MON PLAT+</span> !</h2>
+        <p>Votre abonnement est actif. Vous pouvez des maintenant configurer votre menu interactif.</p>
+        <div class="success-details">
+            <div class="row">
+                <span>Plan</span>
+                <span id="successPlan">Pro</span>
+            </div>
+            <div class="row">
+                <span>Restaurant</span>
+                <span id="successRestaurant">-</span>
+            </div>
+            <div class="row">
+                <span>Prochaine facture</span>
+                <span id="successBilling">-</span>
+            </div>
+        </div>
+        <a href="dashboard.html" class="btn btn-primary btn-lg">Acceder a mon espace</a>
+    </section>
+
+    <script>
+        let isAnnual = false;
+        let selectedPaymentMethod = 'card';
+
+        function toggleBilling() {
+            isAnnual = !isAnnual;
+            const toggle = document.getElementById('billingToggle');
+            toggle.classList.toggle('annual', isAnnual);
+
+            document.querySelectorAll('.pricing-toggle span').forEach((s, i) => {
+                if (i === 0) s.classList.toggle('active', !isAnnual);
+                if (i === 1) s.classList.toggle('active', isAnnual);
+            });
+
+            document.querySelectorAll('.abonnement-card').forEach(card => {
+                const monthly = parseInt(card.dataset.monthly);
+                const annual = parseInt(card.dataset.annual);
+                const priceEl = card.querySelector('.price-value');
+                const periodEl = card.querySelector('.monthly-amount');
+
+                if (isAnnual) {
+                    priceEl.textContent = annual;
+                    periodEl.textContent = 'Facture annuelle (' + (annual * 12) + '€/an)';
+                } else {
+                    priceEl.textContent = monthly;
+                    periodEl.textContent = 'Facture mensuelle';
+                }
+            });
+        }
+
+        function selectPaymentMethod(el, method) {
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedPaymentMethod = method;
+
+            const cardFields = document.getElementById('cardPaymentFields');
+            cardFields.style.display = method === 'card' ? 'block' : 'none';
+        }
+
+        function selectPlan(plan, price, name) {
+            if (isAnnual) {
+                const card = document.querySelector(`[data-plan="${plan}"]`);
+                price = parseInt(card.dataset.annual);
+            }
+
+            document.getElementById('summaryPlan').textContent = 'Plan ' + name;
+            document.getElementById('summaryPrice').textContent = '€' + price + (isAnnual ? '/an' : '/mois');
+            document.getElementById('summaryFreq').textContent = isAnnual ? 'Annuelle' : 'Mensuelle';
+            document.getElementById('submitPrice').textContent = '€' + price;
+            document.getElementById('summaryTotal').textContent = isAnnual ? '€0 (essai)' : '€0 (essai)';
+
+            document.getElementById('pricingSection').style.display = 'none';
+            document.getElementById('checkoutSection').classList.add('active');
+            document.getElementById('checkoutSuccess').classList.remove('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            const session = JSON.parse(localStorage.getItem('vmp_session'));
+            if (session) {
+                document.getElementById('subName').value = session.name || '';
+                document.getElementById('subEmail').value = session.email || '';
+                document.getElementById('subRestaurant').value = session.restaurant || '';
+            }
+
+            document.getElementById('subscriptionForm').dataset.plan = plan;
+            document.getElementById('subscriptionForm').dataset.price = price;
+            document.getElementById('subscriptionForm').dataset.planName = name;
+        }
+
+        document.getElementById('subscriptionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const plan = this.dataset.plan;
+            const price = parseInt(this.dataset.price);
+            const planName = this.dataset.planName;
+            const name = document.getElementById('subName').value;
+            const email = document.getElementById('subEmail').value;
+            const restaurant = document.getElementById('subRestaurant').value;
+
+            localStorage.setItem('vmp_subscription', JSON.stringify({
+                plan: plan,
+                planName: planName,
+                price: price,
+                billing: isAnnual ? 'annual' : 'monthly',
+                name: name,
+                email: email,
+                restaurant: restaurant,
+                date: new Date().toISOString(),
+                nextBilling: getNextBillingDate(isAnnual),
+                card: '•••• •••• •••• ' + (document.getElementById('subCard').value.slice(-4) || '4242'),
+                paymentMethod: selectedPaymentMethod
+            }));
+
+            localStorage.setItem('vmp_session', JSON.stringify({
+                name: name,
+                email: email,
+                restaurant: restaurant,
+                loggedIn: true
+            }));
+
+            document.getElementById('checkoutForm').style.display = 'none';
+            document.getElementById('checkoutSuccess').classList.add('active');
+            document.getElementById('successPlan').textContent = planName;
+            document.getElementById('successRestaurant').textContent = restaurant;
+            document.getElementById('successBilling').textContent = getNextBillingDate(isAnnual);
+        });
+
+        function getNextBillingDate(annual) {
+            const d = new Date();
+            if (annual) {
+                d.setFullYear(d.getFullYear() + 1);
+            } else {
+                d.setMonth(d.getMonth() + 1);
+            }
+            return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        document.getElementById('subCard').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+            let formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formatted;
+        });
+
+        document.getElementById('subExp').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2);
+            }
+            e.target.value = value;
+        });
+    </script>
+
+</body>
+</html>
