@@ -539,6 +539,10 @@
             <span class="nav-icon">💰</span>
             <span>Paiements</span>
         </a>
+        <a href="#factures" class="nav-item">
+            <span class="nav-icon">🧾</span>
+            <span>Factures</span>
+        </a>
         <a href="#support" class="nav-item">
             <span class="nav-icon">💬</span>
             <span>Support</span>
@@ -643,7 +647,7 @@
             <div class="plan-current">
                 <div class="plan-badge">Plan Actuel</div>
                 <div class="plan-name" id="currentPlan">Starter</div>
-                <div class="plan-price"><span id="planPrice">29</span>€/mois</div>
+                <div class="plan-price"><span id="planPrice">32,99</span>€/mois</div>
                 <div class="plan-renewal">Prochaine facture le <span id="nextBilling">6 septembre 2026</span></div>
             </div>
             <div class="plan-features">
@@ -676,19 +680,27 @@
                 <div class="payment-item">
                     <div class="payment-date">06 août 2026</div>
                     <div class="payment-desc">Abonnement Starter</div>
-                    <div class="payment-amount">29,00 €</div>
+                    <div class="payment-amount">32,99 €</div>
                     <div class="payment-status-badge paid">Payé</div>
                 </div>
                 <div class="payment-item">
                     <div class="payment-date">06 juillet 2026</div>
                     <div class="payment-desc">Abonnement Starter</div>
-                    <div class="payment-amount">29,00 €</div>
+                    <div class="payment-amount">32,99 €</div>
                     <div class="payment-status-badge paid">Payé</div>
                 </div>
             </div>
             <div class="auto-payment-info">
                 <div class="info-icon">ℹ️</div>
                 <p>Les paiements sont automatiques chaque mois. Votre carte sera débitée le jour d'anniversaire de votre inscription.</p>
+            </div>
+        </div>
+
+        <!-- Factures -->
+        <div id="factures" class="content-section">
+            <h3 class="mb-2">Mes Factures</h3>
+            <div id="invoicesList" class="plats-list-mobile">
+                <p style="color:var(--text-muted);text-align:center;padding:1rem;">Chargement des factures...</p>
             </div>
         </div>
 
@@ -759,7 +771,7 @@
         function loadSubscription() {
             const sub = JSON.parse(localStorage.getItem('vmp_subscription')) || {
                 plan: 'starter',
-                price: 29,
+                price: 32.99,
                 nextBilling: '6 septembre 2026',
                 card: '•••• •••• •••• 4242'
             };
@@ -800,6 +812,150 @@
 
         // Init
         loadSubscription();
+        loadInvoices();
+
+        function loadInvoices() {
+            const session = JSON.parse(localStorage.getItem('vmp_session'));
+            const allInvoices = JSON.parse(localStorage.getItem('vmp_invoices')) || [];
+            const userInvoices = allInvoices.filter(inv => inv.email === session.email);
+
+            const container = document.getElementById('invoicesList');
+            if (userInvoices.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">Aucune facture pour le moment</p>';
+                return;
+            }
+
+            container.innerHTML = userInvoices.reverse().map(inv => {
+                const date = new Date(inv.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                return `
+                    <div class="plat-item-mobile" style="flex-direction:column;align-items:stretch;gap:0.75rem;">
+                        <div style="display:flex;align-items:center;gap:1rem;">
+                            <div class="plat-icon-mobile">🧾</div>
+                            <div class="plat-info" style="flex:1;">
+                                <strong>Facture ${inv.id}</strong>
+                                <span>${date} • ${inv.plan}</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:700;color:var(--primary);">${inv.amount.toFixed(2)} €</div>
+                                <div style="font-size:0.75rem;color:#00c853;">Payé</div>
+                            </div>
+                        </div>
+                        <button onclick="printInvoice('${inv.id}')" style="width:100%;padding:0.6rem;background:var(--border);border:none;border-radius:8px;color:var(--text);font-size:0.85rem;font-weight:600;cursor:pointer;">
+                            🖨️ Imprimer la facture
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function printInvoice(invoiceId) {
+            const allInvoices = JSON.parse(localStorage.getItem('vmp_invoices')) || [];
+            const inv = allInvoices.find(i => i.id === invoiceId);
+            if (!inv) return;
+
+            const date = new Date(inv.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Facture ${inv.id}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #000; }
+                        .header { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 3px solid #f5a623; padding-bottom: 20px; }
+                        .brand h1 { font-size: 24px; color: #0a0a0a; }
+                        .brand h1 span { color: #f5a623; }
+                        .brand p { color: #666; font-size: 12px; margin-top: 5px; }
+                        .invoice-info { text-align: right; }
+                        .invoice-info h2 { font-size: 28px; color: #f5a623; margin-bottom: 5px; }
+                        .invoice-info p { font-size: 13px; color: #666; }
+                        .client-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                        .client-box { background: #f9f9f9; padding: 20px; border-radius: 8px; width: 48%; }
+                        .client-box h3 { font-size: 12px; text-transform: uppercase; color: #999; margin-bottom: 10px; letter-spacing: 1px; }
+                        .client-box p { font-size: 14px; line-height: 1.8; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                        th { background: #0a0a0a; color: #fff; padding: 12px 15px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+                        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+                        tr:last-child td { border-bottom: 2px solid #0a0a0a; }
+                        .total-section { text-align: right; margin-top: 20px; }
+                        .total-row { display: flex; justify-content: flex-end; gap: 40px; padding: 8px 0; font-size: 14px; }
+                        .total-row.grand { font-size: 20px; font-weight: 800; border-top: 2px solid #0a0a0a; padding-top: 12px; margin-top: 8px; }
+                        .total-row.grand span:last-child { color: #f5a623; }
+                        .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 11px; color: #999; }
+                        .paid-badge { display: inline-block; background: #22c55e; color: #fff; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+                        @media print { body { padding: 20px; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="brand">
+                            <h1>VOIR MON PLAT<span>+</span></h1>
+                            <p>La carte qui prend vie</p>
+                            <p style="margin-top:10px;">SARL VOIR MON PLAT+</p>
+                            <p>France</p>
+                            <p>contact@voirmonplat.com</p>
+                        </div>
+                        <div class="invoice-info">
+                            <h2>FACTURE</h2>
+                            <p><strong>${inv.id}</strong></p>
+                            <p>Date : ${date}</p>
+                            <p style="margin-top:8px;"><span class="paid-badge">Payé</span></p>
+                        </div>
+                    </div>
+
+                    <div class="client-section">
+                        <div class="client-box">
+                            <h3>Facturer à</h3>
+                            <p><strong>${inv.client}</strong></p>
+                            <p>${inv.restaurant}</p>
+                            <p>${inv.email}</p>
+                            <p>${inv.phone || ''}</p>
+                        </div>
+                        <div class="client-box">
+                            <h3>Abonnement</h3>
+                            <p><strong>Plan ${inv.plan}</strong></p>
+                            <p>Facturation mensuelle</p>
+                            <p>Paiement automatique</p>
+                            <p>Méthode : ${inv.paymentMethod === 'card' ? 'CB/Visa' : inv.paymentMethod === 'paypal' ? 'PayPal' : inv.paymentMethod === 'apple' ? 'Apple Pay' : 'Google Pay'}</p>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Période</th>
+                                <th style="text-align:right;">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Abonnement VOIR MON PLAT+ — Plan ${inv.plan}</td>
+                                <td>Mensuel</td>
+                                <td style="text-align:right;">${inv.amount.toFixed(2)} €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="total-section">
+                        <div class="total-row"><span>Sous-total</span><span>${inv.amount.toFixed(2)} €</span></div>
+                        <div class="total-row"><span>TVA (20%)</span><span>${(inv.amount * 0.20).toFixed(2)} €</span></div>
+                        <div class="total-row grand"><span>Total TTC</span><span>${(inv.amount * 1.20).toFixed(2)} €</span></div>
+                    </div>
+
+                    <div class="footer">
+                        <p>VOIR MON PLAT+ — SARL au capital de 1 000 € — SIRET: 000 000 000 00000</p>
+                        <p style="margin-top:5px;">Merci de votre confiance !</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+            win.print();
+        }
     </script>
 </body>
 </html>

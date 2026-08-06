@@ -811,6 +811,11 @@
                 <span class="icon">💰</span>
                 <span>Paiements</span>
             </a>
+            <a class="sidebar-link" data-section="factures" onclick="switchSection('factures')">
+                <span class="icon">🧾</span>
+                <span>Factures</span>
+                <span class="count" id="invoiceCount">0</span>
+            </a>
             <a class="sidebar-link" data-section="revenus" onclick="switchSection('revenus')">
                 <span class="icon">📈</span>
                 <span>Revenus</span>
@@ -967,7 +972,7 @@
                     <div class="stat-icon yellow">🍽️</div>
                     <div>
                         <div class="stat-value" id="statStarter">0</div>
-                        <div class="stat-label">Plan Starter (29€)</div>
+                        <div class="stat-label">Plan Starter (32,99€)</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -1023,6 +1028,74 @@
                         </tr>
                     </thead>
                     <tbody id="allPaymentsTable">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- FACTURES -->
+        <section class="admin-section" id="section-factures">
+            <div class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1>Gestion des <span>factures</span></h1>
+                </div>
+                <div class="admin-topbar-actions">
+                    <button class="btn-add-client" onclick="exportInvoices()">📥 Exporter CSV</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon yellow">🧾</div>
+                    <div>
+                        <div class="stat-value" id="statTotalInvoices">0</div>
+                        <div class="stat-label">Total factures</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✅</div>
+                    <div>
+                        <div class="stat-value" id="statPaidInvoices">0</div>
+                        <div class="stat-label">Payees</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">💰</div>
+                    <div>
+                        <div class="stat-value" id="statTotalInvoiced">0€</div>
+                        <div class="stat-label">Montant total</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">📅</div>
+                    <div>
+                        <div class="stat-value" id="statThisMonthInvoiced">0€</div>
+                        <div class="stat-label">Ce mois</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card full-width-section">
+                <div class="admin-card-header">
+                    <h3>Toutes les factures</h3>
+                </div>
+                <table class="clients-table">
+                    <thead>
+                        <tr>
+                            <th>N° Facture</th>
+                            <th>Client</th>
+                            <th>Restaurant</th>
+                            <th>Plan</th>
+                            <th>Montant</th>
+                            <th>TVA</th>
+                            <th>Total TTC</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allInvoicesTable">
                     </tbody>
                 </table>
             </div>
@@ -1207,9 +1280,9 @@
                     <div>
                         <label>Plan</label>
                         <select id="clientPlan" required>
-                            <option value="starter">Starter (29€/mois)</option>
-                            <option value="pro" selected>Pro (69€/mois)</option>
-                            <option value="premium">Premium (149€/mois)</option>
+                            <option value="starter">Starter (32,99€/mois)</option>
+                            <option value="pro" selected>Pro (72,99€/mois)</option>
+                            <option value="premium">Premium (152,99€/mois)</option>
                         </select>
                     </div>
                     <div>
@@ -1254,12 +1327,12 @@
         ];
 
         const defaultPayments = [
-            { client: 'Marie Laurent', amount: 69, plan: 'Pro', date: '06/08/2026', statut: 'active' },
-            { client: 'Pierre Dupont', amount: 29, plan: 'Starter', date: '06/08/2026', statut: 'active' },
-            { client: 'Sophie Bernard', amount: 149, plan: 'Premium', date: '06/08/2026', statut: 'active' },
-            { client: 'Thomas Petit', amount: 69, plan: 'Pro', date: '06/08/2026', statut: 'active' },
-            { client: 'Lucas Simon', amount: 69, plan: 'Pro', date: '05/08/2026', statut: 'active' },
-            { client: 'Julie Moreau', amount: 29, plan: 'Starter', date: '01/08/2026', statut: 'pending' },
+            { client: 'Marie Laurent', amount: 72.99, plan: 'Pro', date: '06/08/2026', statut: 'active' },
+            { client: 'Pierre Dupont', amount: 32.99, plan: 'Starter', date: '06/08/2026', statut: 'active' },
+            { client: 'Sophie Bernard', amount: 152.99, plan: 'Premium', date: '06/08/2026', statut: 'active' },
+            { client: 'Thomas Petit', amount: 72.99, plan: 'Pro', date: '06/08/2026', statut: 'active' },
+            { client: 'Lucas Simon', amount: 72.99, plan: 'Pro', date: '05/08/2026', statut: 'active' },
+            { client: 'Julie Moreau', amount: 32.99, plan: 'Starter', date: '01/08/2026', statut: 'pending' },
         ];
 
         // LOAD DATA
@@ -1293,7 +1366,7 @@
         function updateStats() {
             const activeClients = clients.filter(c => c.statut === 'active').length;
             const totalRevenue = clients.filter(c => c.statut === 'active').reduce((sum, c) => {
-                const prices = { starter: 29, pro: 69, premium: 149 };
+                const prices = { starter: 32.99, pro: 72.99, premium: 152.99 };
                 return sum + (prices[c.plan] || 0);
             }, 0);
             const totalScans = clients.reduce((sum, c) => sum + (c.scans || 0), 0);
@@ -1312,7 +1385,7 @@
             document.getElementById('statStarter').textContent = starter;
             document.getElementById('statPro').textContent = pro;
             document.getElementById('statPremium').textContent = premium;
-            document.getElementById('statMRR').textContent = (starter * 29 + pro * 69 + premium * 149) + '€';
+            document.getElementById('statMRR').textContent = (starter * 32.99 + pro * 72.99 + premium * 152.99).toFixed(2) + '€';
 
             // Revenus
             document.getElementById('statTotalRevenue').textContent = (totalRevenue * 12) + '€';
@@ -1366,7 +1439,7 @@
                         </div>
                     </td>
                     <td><span class="plan-badge ${c.plan}">${c.plan.charAt(0).toUpperCase() + c.plan.slice(1)}</span></td>
-                    <td>${c.plan === 'starter' ? '29€' : c.plan === 'pro' ? '69€' : '149€'}/mois</td>
+                    <td>${c.plan === 'starter' ? '32,99€' : c.plan === 'pro' ? '72,99€' : '152,99€'}/mois</td>
                     <td><span class="status-badge ${c.statut}"><span class="status-dot"></span>${c.statut === 'active' ? 'Actif' : c.statut === 'pending' ? 'En attente' : 'Inactif'}</span></td>
                     <td>${c.date}</td>
                     <td>
@@ -1406,6 +1479,160 @@
             `).join('');
         }
 
+        // FACTURES
+        function renderInvoices() {
+            const invoices = JSON.parse(localStorage.getItem('vmp_invoices')) || [];
+            const tbody = document.getElementById('allInvoicesTable');
+            document.getElementById('invoiceCount').textContent = invoices.length;
+            document.getElementById('statTotalInvoices').textContent = invoices.length;
+            document.getElementById('statPaidInvoices').textContent = invoices.length;
+
+            const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+            const totalTTC = totalAmount * 1.20;
+            document.getElementById('statTotalInvoiced').textContent = totalTTC.toFixed(0) + '€';
+
+            const thisMonth = invoices.filter(inv => {
+                const d = new Date(inv.date);
+                const now = new Date();
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            });
+            const thisMonthTotal = thisMonth.reduce((sum, inv) => sum + (inv.amount * 1.20), 0);
+            document.getElementById('statThisMonthInvoiced').textContent = thisMonthTotal.toFixed(0) + '€';
+
+            if (invoices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:2rem;">Aucune facture</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = invoices.reverse().map(inv => {
+                const date = new Date(inv.date).toLocaleDateString('fr-FR');
+                const tva = (inv.amount * 0.20).toFixed(2);
+                const ttc = (inv.amount * 1.20).toFixed(2);
+                return `
+                    <tr>
+                        <td style="font-weight:600;font-family:monospace;">${inv.id}</td>
+                        <td>${inv.client}</td>
+                        <td>${inv.restaurant}</td>
+                        <td><span class="plan-badge ${inv.plan.toLowerCase()}">${inv.plan}</span></td>
+                        <td style="font-weight:600;">${inv.amount.toFixed(2)}€</td>
+                        <td>${tva}€</td>
+                        <td style="font-weight:700;color:var(--vert);">${ttc}€</td>
+                        <td>${date}</td>
+                        <td><span class="status-badge active"><span class="status-dot"></span>Paye</span></td>
+                        <td><button class="action-btn" onclick="printAdminInvoice('${inv.id}')" title="Imprimer">🖨️</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function printAdminInvoice(invoiceId) {
+            const invoices = JSON.parse(localStorage.getItem('vmp_invoices')) || [];
+            const inv = invoices.find(i => i.id === invoiceId);
+            if (!inv) return;
+
+            const date = new Date(inv.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            const html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Facture ${inv.id}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #000; }
+                        .header { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 3px solid #f5a623; padding-bottom: 20px; }
+                        .brand h1 { font-size: 24px; color: #0a0a0a; }
+                        .brand h1 span { color: #f5a623; }
+                        .brand p { color: #666; font-size: 12px; margin-top: 5px; }
+                        .invoice-info { text-align: right; }
+                        .invoice-info h2 { font-size: 28px; color: #f5a623; margin-bottom: 5px; }
+                        .invoice-info p { font-size: 13px; color: #666; }
+                        .client-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                        .client-box { background: #f9f9f9; padding: 20px; border-radius: 8px; width: 48%; }
+                        .client-box h3 { font-size: 12px; text-transform: uppercase; color: #999; margin-bottom: 10px; letter-spacing: 1px; }
+                        .client-box p { font-size: 14px; line-height: 1.8; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                        th { background: #0a0a0a; color: #fff; padding: 12px 15px; text-align: left; font-size: 12px; text-transform: uppercase; }
+                        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+                        .total-section { text-align: right; margin-top: 20px; }
+                        .total-row { display: flex; justify-content: flex-end; gap: 40px; padding: 8px 0; font-size: 14px; }
+                        .total-row.grand { font-size: 20px; font-weight: 800; border-top: 2px solid #0a0a0a; padding-top: 12px; margin-top: 8px; }
+                        .total-row.grand span:last-child { color: #f5a623; }
+                        .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 11px; color: #999; }
+                        .paid-badge { display: inline-block; background: #22c55e; color: #fff; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+                        @media print { body { padding: 20px; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="brand">
+                            <h1>VOIR MON PLAT<span>+</span></h1>
+                            <p>La carte qui prend vie</p>
+                            <p style="margin-top:10px;">SARL VOIR MON PLAT+</p>
+                            <p>France</p>
+                            <p>contact@voirmonplat.com</p>
+                        </div>
+                        <div class="invoice-info">
+                            <h2>FACTURE</h2>
+                            <p><strong>${inv.id}</strong></p>
+                            <p>Date : ${date}</p>
+                            <p style="margin-top:8px;"><span class="paid-badge">Paye</span></p>
+                        </div>
+                    </div>
+                    <div class="client-section">
+                        <div class="client-box">
+                            <h3>Facturer a</h3>
+                            <p><strong>${inv.client}</strong></p>
+                            <p>${inv.restaurant}</p>
+                            <p>${inv.email}</p>
+                            <p>${inv.phone || ''}</p>
+                        </div>
+                        <div class="client-box">
+                            <h3>Abonnement</h3>
+                            <p><strong>Plan ${inv.plan}</strong></p>
+                            <p>Facturation mensuelle</p>
+                            <p>Paiement automatique</p>
+                        </div>
+                    </div>
+                    <table>
+                        <thead><tr><th>Description</th><th>Periode</th><th style="text-align:right;">Montant</th></tr></thead>
+                        <tbody><tr><td>Abonnement VOIR MON PLAT+ — Plan ${inv.plan}</td><td>Mensuel</td><td style="text-align:right;">${inv.amount.toFixed(2)} €</td></tr></tbody>
+                    </table>
+                    <div class="total-section">
+                        <div class="total-row"><span>Sous-total</span><span>${inv.amount.toFixed(2)} €</span></div>
+                        <div class="total-row"><span>TVA (20%)</span><span>${(inv.amount * 0.20).toFixed(2)} €</span></div>
+                        <div class="total-row grand"><span>Total TTC</span><span>${(inv.amount * 1.20).toFixed(2)} €</span></div>
+                    </div>
+                    <div class="footer">
+                        <p>VOIR MON PLAT+ — SARL au capital de 1 000 € — SIRET: 000 000 000 00000</p>
+                        <p style="margin-top:5px;">Merci de votre confiance !</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+            win.print();
+        }
+
+        function exportInvoices() {
+            const invoices = JSON.parse(localStorage.getItem('vmp_invoices')) || [];
+            if (invoices.length === 0) { showNotification('Aucune facture a exporter', 'error'); return; }
+
+            let csv = 'N° Facture;Client;Email;Restaurant;Plan;Montant HT;TVA;Total TTC;Date;Statut\n';
+            invoices.forEach(inv => {
+                const date = new Date(inv.date).toLocaleDateString('fr-FR');
+                csv += `${inv.id};${inv.client};${inv.email};${inv.restaurant};${inv.plan};${inv.amount.toFixed(2)};${(inv.amount*0.20).toFixed(2)};${(inv.amount*1.20).toFixed(2)};${date};Paye\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'factures_voirmonplat_' + new Date().toISOString().slice(0,10) + '.csv';
+            link.click();
+            showNotification('CSV exporte avec succes !', 'success');
+        }
+
         // MODAL
         function openModal() {
             document.getElementById('clientModal').classList.add('active');
@@ -1433,7 +1660,7 @@
             clients.push(newClient);
             saveClients();
 
-            const prices = { starter: 29, pro: 69, premium: 149 };
+            const prices = { starter: 32.99, pro: 72.99, premium: 152.99 };
             payments.push({
                 client: newClient.prenom + ' ' + newClient.nom,
                 amount: prices[newClient.plan],
@@ -1522,6 +1749,7 @@
         renderRecentClients();
         renderAllClients();
         renderPayments();
+        renderInvoices();
     </script>
 
 </body>

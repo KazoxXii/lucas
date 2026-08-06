@@ -48,9 +48,64 @@
             color: #000;
         }
 
+        /* PROMO BANNER */
+        .promo-banner {
+            background: var(--jaune);
+            color: #000;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 0.5rem 0;
+            font-size: 0.8rem;
+            font-weight: 500;
+            position: relative;
+            z-index: 101;
+        }
+
+        .promo-track {
+            display: inline-flex;
+            animation: promoScroll 25s linear infinite;
+        }
+
+        .promo-track span {
+            padding: 0 2.5rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .promo-track span strong {
+            background: #000;
+            color: var(--jaune);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes promoScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @media (max-width: 768px) {
+            .promo-banner {
+                font-size: 0.7rem;
+                padding: 0.4rem 0;
+            }
+
+            .promo-track span {
+                padding: 0 1.5rem;
+            }
+
+            .promo-track span strong {
+                padding: 0.1rem 0.4rem;
+                font-size: 0.65rem;
+            }
+        }
+
         /* NAVBAR */
         .navbar {
-            position: fixed;
+            position: sticky;
             top: 0;
             width: 100%;
             z-index: 100;
@@ -163,7 +218,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 8rem 2rem 4rem;
+            padding: 6rem 2rem 4rem;
             overflow: hidden;
         }
 
@@ -780,7 +835,19 @@
 </head>
 <body>
 
-    <nav class="navbar">
+    <!-- PROMO BANNER -->
+    <div class="promo-banner" id="promoBanner">
+        <div class="promo-track">
+            <span>🎉 CODE PROMO : <strong>MONPLATS+</strong> → -10% sur votre 1er abonnement</span>
+            <span>🎉 CODE PROMO : <strong>MONPLATS+</strong> → -10% sur votre 1er abonnement</span>
+            <span>🎉 CODE PROMO : <strong>MONPLATS+</strong> → -10% sur votre 1er abonnement</span>
+            <span>🎉 CODE PROMO : <strong>MONPLATS+</strong> → -10% sur votre 1er abonnement</span>
+            <span>🎉 CODE PROMO : <strong>MONPLATS+</strong> → -10% sur votre 1er abonnement</span>
+            <span>🎉 CODE PROMO : <strong>MONPLATS+</strong> → -10% sur votre 1er abonnement</span>
+        </div>
+    </div>
+
+    <nav class="navbar" id="mainNav">
         <div class="nav-container">
             <div class="logo">
                 <span class="logo-icon">&#127869;</span>
@@ -936,7 +1003,7 @@
                     <div class="price-header">
                         <h3>Starter</h3>
                         <div class="price">
-                            <span class="price-amount">29&euro;</span>
+                            <span class="price-amount">32,99&euro;</span>
                             <span class="price-period">/mois</span>
                         </div>
                     </div>
@@ -953,7 +1020,7 @@
                     <div class="price-header">
                         <h3>Pro</h3>
                         <div class="price">
-                            <span class="price-amount">69&euro;</span>
+                            <span class="price-amount">72,99&euro;</span>
                             <span class="price-period">/mois</span>
                         </div>
                     </div>
@@ -970,7 +1037,7 @@
                     <div class="price-header">
                         <h3>Premium</h3>
                         <div class="price">
-                            <span class="price-amount">149&euro;</span>
+                            <span class="price-amount">152,99&euro;</span>
                             <span class="price-period">/mois</span>
                         </div>
                     </div>
@@ -1138,7 +1205,8 @@
         }
 
         // Navbar scroll
-        const navbar = document.querySelector('.navbar');
+        const navbar = document.getElementById('mainNav');
+        const promo = document.getElementById('promoBanner');
         window.addEventListener('scroll', () => {
             if (window.scrollY > 50) {
                 navbar.style.background = 'rgba(10, 10, 10, 0.95)';
