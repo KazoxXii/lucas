@@ -815,12 +815,78 @@
         function simulateScan() {
             const btn = document.getElementById('scanBtn');
             btn.classList.add('scanning');
+            showScanOverlay();
+        }
 
-            setTimeout(() => {
-                btn.classList.remove('scanning');
-                const randomPlat = plats[Math.floor(Math.random() * plats.length)];
-                openViewer(randomPlat);
-            }, 1500);
+        function showScanOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'scanProgressOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;';
+            overlay.innerHTML = `
+                <div style="position:relative;width:200px;height:200px;">
+                    <svg width="200" height="200" viewBox="0 0 200 200">
+                        <circle cx="100" cy="100" r="90" fill="none" stroke="#222" stroke-width="6"/>
+                        <circle id="scanCircle" cx="100" cy="100" r="90" fill="none" stroke="#f5a623" stroke-width="6" stroke-dasharray="565.48" stroke-dashoffset="565.48" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 0.1s linear;"/>
+                        <circle cx="100" cy="100" r="70" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="8 4"/>
+                    </svg>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <span id="scanPercent" style="font-size:2.5rem;font-weight:900;color:#f5a623;">0%</span>
+                        <span style="font-size:0.8rem;color:#999;margin-top:0.25rem;">Analyse en cours</span>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <div id="scanStatus" style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:0.5rem;">Initialisation du scan...</div>
+                    <div id="scanDetail" style="color:#666;font-size:0.85rem;">Detection du contour du plat</div>
+                </div>
+                <div style="width:250px;height:4px;background:#222;border-radius:2px;overflow:hidden;">
+                    <div id="scanBar" style="width:0%;height:100%;background:#f5a623;border-radius:2px;transition:width 0.1s linear;"></div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const circle = document.getElementById('scanCircle');
+            const percent = document.getElementById('scanPercent');
+            const bar = document.getElementById('scanBar');
+            const status = document.getElementById('scanStatus');
+            const detail = document.getElementById('scanDetail');
+            const circumference = 2 * Math.PI * 90;
+
+            const steps = [
+                { p: 5, s: 'Detection du plat...', d: 'Analyse du contour', t: 200 },
+                { p: 15, s: 'Scan du contour...', d: 'Reconnaissance de la forme', t: 200 },
+                { p: 25, s: 'Analyse des couleurs...', d: 'Capture des textures', t: 200 },
+                { p: 35, s: 'Scan de la surface...', d: 'Mesure de la profondeur', t: 150 },
+                { p: 45, s: 'Analyse des details...', d: 'Detection des ingredients', t: 150 },
+                { p: 55, s: 'Scan 360° en cours...', d: 'Rotation et capture multiple', t: 150 },
+                { p: 65, s: 'Reconstruction 3D...', d: 'Generation du maillage', t: 150 },
+                { p: 75, s: 'Application des textures...', d: 'Rendu haute definition', t: 150 },
+                { p: 85, s: 'Eclairage dynamique...', d: 'Calcul des ombres', t: 150 },
+                { p: 92, s: 'Finalisation...', d: 'Optimisation du rendu', t: 200 },
+                { p: 100, s: 'Scan termine !', d: 'Plat detecte avec succes', t: 300 }
+            ];
+
+            let i = 0;
+            function nextStep() {
+                if (i >= steps.length) {
+                    setTimeout(() => {
+                        overlay.remove();
+                        document.getElementById('scanBtn').classList.remove('scanning');
+                        const randomPlat = plats[Math.floor(Math.random() * plats.length)];
+                        openViewer(randomPlat);
+                    }, 500);
+                    return;
+                }
+                const step = steps[i];
+                const offset = circumference - (step.p / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                percent.textContent = step.p + '%';
+                bar.style.width = step.p + '%';
+                status.textContent = step.s;
+                detail.textContent = step.d;
+                i++;
+                setTimeout(nextStep, step.t);
+            }
+            nextStep();
         }
 
         // 3D VIEWER
@@ -835,7 +901,7 @@
                 document.getElementById('dishDesc').textContent = plat.desc;
 
                 init3D(plat);
-            }, 800);
+            }, 600);
         }
 
         function closeViewer() {
