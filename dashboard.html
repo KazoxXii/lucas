@@ -734,8 +734,18 @@
     </main>
 
     <script>
-        // Système d'authentification et navigation
-        const session = JSON.parse(localStorage.getItem('vmp_session'));
+        // Systeme d'authentification et navigation
+        function getSession() {
+            try {
+                const session = JSON.parse(localStorage.getItem('vmp_session'));
+                if (session && session.email && session.loggedIn) {
+                    return session;
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        const session = getSession();
         if (!session) {
             window.location.href = 'connexion.html';
         } else {
@@ -761,7 +771,7 @@
             });
         });
 
-        // Déconnexion
+        // Deconnexion
         function logout() {
             localStorage.removeItem('vmp_session');
             window.location.href = 'connexion.html';

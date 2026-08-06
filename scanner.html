@@ -923,9 +923,10 @@
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 8, 20);
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 2, 4);
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3, 5);
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
@@ -933,133 +934,433 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            renderer.outputEncoding = THREE.sRGBEncoding;
 
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            // ENVIRONMENT LIGHTING
+            const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.3);
             scene.add(ambientLight);
 
-            const mainLight = new THREE.DirectionalLight(0xffffff, 1);
-            mainLight.position.set(5, 10, 5);
-            mainLight.castShadow = true;
-            mainLight.shadow.mapSize.width = 1024;
-            mainLight.shadow.mapSize.height = 1024;
-            scene.add(mainLight);
+            // Main key light (warm)
+            const keyLight = new THREE.SpotLight(0xfff0d4, 2, 15, Math.PI / 4, 0.5, 1);
+            keyLight.position.set(3, 8, 4);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 2048;
+            keyLight.shadow.mapSize.height = 2048;
+            keyLight.shadow.bias = -0.0001;
+            scene.add(keyLight);
 
-            const warmLight = new THREE.PointLight(0xf5a623, 0.5, 10);
-            warmLight.position.set(-3, 3, 2);
-            scene.add(warmLight);
+            // Fill light (cool blue)
+            const fillLight = new THREE.SpotLight(0xc4d4ff, 0.6, 12, Math.PI / 3, 0.6, 1);
+            fillLight.position.set(-4, 5, -2);
+            scene.add(fillLight);
 
-            const rimLight = new THREE.PointLight(0xffffff, 0.3, 10);
-            rimLight.position.set(3, 2, -3);
+            // Rim/back light
+            const rimLight = new THREE.SpotLight(0xffffff, 1, 10, Math.PI / 5, 0.3, 1);
+            rimLight.position.set(0, 6, -6);
             scene.add(rimLight);
 
-            // Plate (base)
-            const plateGeo = new THREE.CylinderGeometry(1.5, 1.4, 0.15, 64);
-            const plateMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                metalness: 0.1,
-                roughness: 0.3
-            });
-            const plate = new THREE.Mesh(plateGeo, plateMat);
-            plate.position.y = -0.5;
-            plate.castShadow = true;
-            plate.receiveShadow = true;
-            scene.add(plate);
+            // Warm accent
+            const accentLight = new THREE.PointLight(0xf5a623, 0.4, 8);
+            accentLight.position.set(-2, 2, 3);
+            scene.add(accentLight);
 
-            // Plate rim
-            const rimGeo = new THREE.TorusGeometry(1.45, 0.05, 16, 64);
-            const rimMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, metalness: 0.3, roughness: 0.2 });
+            // Bottom bounce light
+            const bounceLight = new THREE.PointLight(0xfff5e6, 0.2, 6);
+            bounceLight.position.set(0, -1, 0);
+            scene.add(bounceLight);
+
+            // TABLE SURFACE
+            const tableGeo = new THREE.CylinderGeometry(3, 3, 0.08, 64);
+            const tableMat = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                metalness: 0.4,
+                roughness: 0.2,
+                envMapIntensity: 0.5
+            });
+            const table = new THREE.Mesh(tableGeo, tableMat);
+            table.position.y = -0.55;
+            table.receiveShadow = true;
+            scene.add(table);
+
+            // PLATE - Multiple layers for realism
+            // Plate base (slightly raised edge)
+            const plateBaseGeo = new THREE.CylinderGeometry(1.6, 1.55, 0.08, 64);
+            const plateBaseMat = new THREE.MeshStandardMaterial({
+                color: 0xfafafa,
+                metalness: 0.05,
+                roughness: 0.15,
+                envMapIntensity: 0.8
+            });
+            const plateBase = new THREE.Mesh(plateBaseGeo, plateBaseMat);
+            plateBase.position.y = -0.47;
+            plateBase.castShadow = true;
+            plateBase.receiveShadow = true;
+            scene.add(plateBase);
+
+            // Plate inner (slightly depressed)
+            const plateInnerGeo = new THREE.CylinderGeometry(1.35, 1.35, 0.03, 64);
+            const plateInnerMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                metalness: 0.02,
+                roughness: 0.1,
+                envMapIntensity: 1
+            });
+            const plateInner = new THREE.Mesh(plateInnerGeo, plateInnerMat);
+            plateInner.position.y = -0.42;
+            plateInner.receiveShadow = true;
+            scene.add(plateInner);
+
+            // Plate rim highlight
+            const rimGeo = new THREE.TorusGeometry(1.5, 0.03, 16, 128);
+            const rimMat = new THREE.MeshStandardMaterial({
+                color: 0xf0f0f0,
+                metalness: 0.6,
+                roughness: 0.1,
+                envMapIntensity: 1.2
+            });
             const rim = new THREE.Mesh(rimGeo, rimMat);
-            rim.position.y = -0.42;
+            rim.position.y = -0.43;
             rim.rotation.x = Math.PI / 2;
             scene.add(rim);
 
-            // Food
-            let foodGeo, foodMat, food;
-            const mainColor = plat.color;
+            // Gold rim accent
+            const goldRimGeo = new THREE.TorusGeometry(1.52, 0.008, 8, 128);
+            const goldRimMat = new THREE.MeshStandardMaterial({
+                color: 0xd4a843,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            const goldRim = new THREE.Mesh(goldRimGeo, goldRimMat);
+            goldRim.position.y = -0.42;
+            goldRim.rotation.x = Math.PI / 2;
+            scene.add(goldRim);
 
-            if (plat.shape === 'cylinder') {
-                foodGeo = new THREE.CylinderGeometry(1, 1.1, 0.6, 32);
-                foodMat = new THREE.MeshStandardMaterial({
-                    color: mainColor,
-                    roughness: 0.6,
-                    metalness: 0.1
-                });
-                food = new THREE.Mesh(foodGeo, foodMat);
-                food.position.y = -0.1;
-            } else if (plat.shape === 'box') {
-                foodGeo = new THREE.BoxGeometry(1.8, 0.5, 1.4, 4, 4, 4);
-                foodMat = new THREE.MeshStandardMaterial({
-                    color: mainColor,
-                    roughness: 0.7,
-                    metalness: 0.05
-                });
-                food = new THREE.Mesh(foodGeo, foodMat);
-                food.position.y = -0.15;
+            // FOOD - Detailed based on category
+            buildFood(plat);
 
-                // Deform for realism
-                const positions = food.geometry.attributes.position;
-                for (let i = 0; i < positions.count; i++) {
-                    positions.setY(i, positions.getY(i) + (Math.random() - 0.5) * 0.05);
-                    positions.setX(i, positions.getX(i) + (Math.random() - 0.5) * 0.03);
-                    positions.setZ(i, positions.getZ(i) + (Math.random() - 0.5) * 0.03);
-                }
-                positions.needsUpdate = true;
-                food.geometry.computeVertexNormals();
-            } else {
-                // Cone for ice cream
-                foodGeo = new THREE.ConeGeometry(0.6, 1, 32);
-                foodMat = new THREE.MeshStandardMaterial({ color: mainColor, roughness: 0.5 });
-                food = new THREE.Mesh(foodGeo, foodMat);
-                food.position.y = 0.2;
-                food.rotation.x = Math.PI;
-            }
+            // SAUCE DRIZZLE
+            addSauce(plat);
 
-            food.castShadow = true;
-            scene.add(food);
-
-            // Garnish details
+            // GARNISH
             addGarnish(plat);
 
+            // STEAM PARTICLES
+            addSteam(plat);
+
             // Ground shadow
-            const groundGeo = new THREE.PlaneGeometry(10, 10);
-            const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+            const groundGeo = new THREE.PlaneGeometry(20, 20);
+            const groundMat = new THREE.ShadowMaterial({ opacity: 0.4 });
             const ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -0.58;
+            ground.position.y = -0.59;
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // Interaction
             setupInteraction(canvas);
-
-            // Animate
             autoRotate = true;
             animate();
         }
 
-        function addGarnish(plat) {
-            // Small decorative elements
-            const colors = [0x228B22, 0xFF6347, 0xFFD700, 0x8B4513];
+        function buildFood(plat) {
+            const c = plat.color;
+            let foodGroup = new THREE.Group();
 
-            for (let i = 0; i < 5; i++) {
-                const size = 0.05 + Math.random() * 0.08;
-                const geo = new THREE.SphereGeometry(size, 8, 8);
-                const mat = new THREE.MeshStandardMaterial({
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    roughness: 0.5
+            if (plat.shape === 'cylinder') {
+                // Main food body - multi-layered
+                const layers = 3 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < layers; i++) {
+                    const r = 0.85 - i * 0.1 + Math.random() * 0.05;
+                    const h = 0.15 + Math.random() * 0.1;
+                    const geo = new THREE.CylinderGeometry(r, r + 0.05, h, 48);
+                    const shade = new THREE.Color(c).offsetHSL(0, 0, (Math.random() - 0.5) * 0.05);
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: shade,
+                        roughness: 0.4 + Math.random() * 0.3,
+                        metalness: 0.02,
+                        envMapIntensity: 0.3
+                    });
+                    const layer = new THREE.Mesh(geo, mat);
+                    layer.position.y = -0.35 + i * 0.12;
+                    layer.castShadow = true;
+
+                    // Slight random rotation for organic feel
+                    layer.rotation.y = Math.random() * 0.1;
+                    layer.rotation.z = (Math.random() - 0.5) * 0.02;
+
+                    // Deform vertices
+                    const pos = layer.geometry.attributes.position;
+                    for (let j = 0; j < pos.count; j++) {
+                        const x = pos.getX(j);
+                        const y = pos.getY(j);
+                        const z = pos.getZ(j);
+                        const noise = Math.sin(x * 5) * Math.cos(z * 5) * 0.02;
+                        pos.setX(j, x + noise);
+                        pos.setZ(j, z + noise);
+                    }
+                    pos.needsUpdate = true;
+                    layer.geometry.computeVertexNormals();
+                    foodGroup.add(layer);
+                }
+
+                // Top surface detail
+                const topGeo = new THREE.CylinderGeometry(0.7, 0.75, 0.05, 48);
+                const topMat = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(c).offsetHSL(0.02, 0, 0.05),
+                    roughness: 0.3,
+                    metalness: 0.05
                 });
-                const garnish = new THREE.Mesh(geo, mat);
-                const angle = (i / 5) * Math.PI * 2;
-                const radius = 0.5 + Math.random() * 0.5;
-                garnish.position.set(
+                const top = new THREE.Mesh(topGeo, topMat);
+                top.position.y = -0.35 + layers * 0.12;
+                top.castShadow = true;
+                foodGroup.add(top);
+
+            } else if (plat.shape === 'box') {
+                // Rectangular food (steak, fish, etc.)
+                const baseGeo = new THREE.BoxGeometry(1.6, 0.35, 1.2, 8, 4, 8);
+                const baseMat = new THREE.MeshStandardMaterial({
+                    color: c,
+                    roughness: 0.5,
+                    metalness: 0.02
+                });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+
+                // Deform for organic shape
+                const pos = base.geometry.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                    const x = pos.getX(i);
+                    const y = pos.getY(i);
+                    const z = pos.getZ(i);
+                    const edge = Math.max(Math.abs(x), Math.abs(z));
+                    const taper = 1 - edge * 0.15;
+                    pos.setY(i, y * taper + Math.sin(x * 3) * 0.02 + Math.cos(z * 4) * 0.015);
+                    pos.setX(i, x + Math.sin(y * 8) * 0.01);
+                    pos.setZ(i, z + Math.cos(y * 6) * 0.01);
+                }
+                pos.needsUpdate = true;
+                base.geometry.computeVertexNormals();
+                base.position.y = -0.22;
+                base.castShadow = true;
+                foodGroup.add(base);
+
+                // Grill marks
+                for (let i = 0; i < 4; i++) {
+                    const markGeo = new THREE.BoxGeometry(1.4, 0.01, 0.04);
+                    const markMat = new THREE.MeshStandardMaterial({
+                        color: 0x2a1506,
+                        roughness: 0.8,
+                        metalness: 0
+                    });
+                    const mark = new THREE.Mesh(markGeo, markMat);
+                    mark.position.set(0, 0.01, -0.4 + i * 0.25);
+                    mark.rotation.y = 0.15;
+                    foodGroup.add(mark);
+                }
+
+                // Glaze/sheen on top
+                const glazeGeo = new THREE.BoxGeometry(1.5, 0.01, 1.1);
+                const glazeMat = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(c).offsetHSL(0, -0.1, 0.1),
+                    roughness: 0.2,
+                    metalness: 0.1,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const glaze = new THREE.Mesh(glazeGeo, glazeMat);
+                glaze.position.y = 0.18;
+                foodGroup.add(glaze);
+
+            } else {
+                // Cone (ice cream, desserts)
+                const baseGeo = new THREE.SphereGeometry(0.55, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.6);
+                const baseMat = new THREE.MeshStandardMaterial({
+                    color: c,
+                    roughness: 0.25,
+                    metalness: 0.02
+                });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+                base.position.y = -0.1;
+                base.castShadow = true;
+
+                // Deform for scoop shape
+                const pos = base.geometry.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                    const y = pos.getY(i);
+                    if (y < 0.1) {
+                        pos.setY(i, y - 0.05);
+                    }
+                }
+                pos.needsUpdate = true;
+                base.geometry.computeVertexNormals();
+                foodGroup.add(base);
+
+                // Drip effect
+                for (let i = 0; i < 3; i++) {
+                    const dripGeo = new THREE.CylinderGeometry(0.03, 0.015, 0.2 + Math.random() * 0.15, 8);
+                    const dripMat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(c).offsetHSL(0.05, 0, -0.1),
+                        roughness: 0.2,
+                        metalness: 0.05
+                    });
+                    const drip = new THREE.Mesh(dripGeo, dripMat);
+                    const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+                    drip.position.set(
+                        Math.cos(angle) * 0.45,
+                        -0.15,
+                        Math.sin(angle) * 0.45
+                    );
+                    drip.rotation.z = (Math.random() - 0.5) * 0.3;
+                    foodGroup.add(drip);
+                }
+            }
+
+            scene.add(foodGroup);
+            currentMesh = foodGroup;
+        }
+
+        function addSauce(plat) {
+            const sauceColors = {
+                'Plats': 0x8B0000,
+                'Pizzas': 0xCC3333,
+                'Pâtes': 0xCC3333,
+                'Poissons': 0xDAA520,
+                'Entrées': 0xD2691E,
+                'Desserts': 0x3C1414,
+                'Végétarien': 0x228B22,
+                'Salades': 0x556B2F
+            };
+            const sauceColor = sauceColors[plat.category] || 0x8B4513;
+
+            // Sauce drizzle on plate
+            for (let i = 0; i < 6; i++) {
+                const curve = new THREE.CatmullRomCurve3([
+                    new THREE.Vector3((Math.random() - 0.5) * 1.2, -0.41, (Math.random() - 0.5) * 1.2),
+                    new THREE.Vector3((Math.random() - 0.5) * 0.8, -0.41, (Math.random() - 0.5) * 0.8),
+                    new THREE.Vector3((Math.random() - 0.5) * 0.4, -0.41, (Math.random() - 0.5) * 0.4)
+                ]);
+                const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.015 + Math.random() * 0.01, 8, false);
+                const tubeMat = new THREE.MeshStandardMaterial({
+                    color: sauceColor,
+                    roughness: 0.15,
+                    metalness: 0.05,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const tube = new THREE.Mesh(tubeGeo, tubeMat);
+                scene.add(tube);
+            }
+
+            // Sauce pool
+            const poolGeo = new THREE.CircleGeometry(0.3 + Math.random() * 0.2, 32);
+            const poolMat = new THREE.MeshStandardMaterial({
+                color: sauceColor,
+                roughness: 0.1,
+                metalness: 0.08,
+                transparent: true,
+                opacity: 0.7
+            });
+            const pool = new THREE.Mesh(poolGeo, poolMat);
+            pool.rotation.x = -Math.PI / 2;
+            pool.position.set((Math.random() - 0.5) * 0.8, -0.41, (Math.random() - 0.5) * 0.8);
+            scene.add(pool);
+        }
+
+        function addGarnish(plat) {
+            const garnishTypes = [
+                { color: 0x228B22, size: 0.04, type: 'herb' },
+                { color: 0x32CD32, size: 0.03, type: 'herb' },
+                { color: 0xFF4500, size: 0.025, type: 'berry' },
+                { color: 0xFFD700, size: 0.02, type: 'seed' },
+                { color: 0x8B4513, size: 0.015, type: 'spice' },
+                { color: 0xFF6347, size: 0.035, type: 'pepper' },
+                { color: 0x90EE90, size: 0.05, type: 'leaf' }
+            ];
+
+            // Herbs scattered
+            for (let i = 0; i < 12; i++) {
+                const g = garnishTypes[Math.floor(Math.random() * garnishTypes.length)];
+                let geo;
+                if (g.type === 'leaf') {
+                    geo = new THREE.PlaneGeometry(g.size, g.size * 1.5);
+                } else if (g.type === 'herb') {
+                    geo = new THREE.BoxGeometry(g.size, 0.005, g.size * 2);
+                } else {
+                    geo = new THREE.SphereGeometry(g.size, 6, 6);
+                }
+                const mat = new THREE.MeshStandardMaterial({
+                    color: g.color,
+                    roughness: 0.6,
+                    metalness: 0,
+                    side: THREE.DoubleSide
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 0.3 + Math.random() * 0.8;
+                mesh.position.set(
                     Math.cos(angle) * radius,
-                    -0.1 + Math.random() * 0.3,
+                    -0.38 + Math.random() * 0.15,
                     Math.sin(angle) * radius
                 );
-                garnish.castShadow = true;
-                scene.add(garnish);
+                mesh.rotation.set(
+                    Math.random() * 0.5,
+                    Math.random() * Math.PI * 2,
+                    Math.random() * 0.3
+                );
+                mesh.castShadow = true;
+                scene.add(mesh);
             }
+
+            // Sesame seeds / small particles
+            for (let i = 0; i < 20; i++) {
+                const geo = new THREE.SphereGeometry(0.008, 4, 4);
+                const mat = new THREE.MeshStandardMaterial({
+                    color: Math.random() > 0.5 ? 0xFFF8DC : 0x2F2F2F,
+                    roughness: 0.4
+                });
+                const seed = new THREE.Mesh(geo, mat);
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 0.2 + Math.random() * 1;
+                seed.position.set(
+                    Math.cos(angle) * radius,
+                    -0.4 + Math.random() * 0.2,
+                    Math.sin(angle) * radius
+                );
+                scene.add(seed);
+            }
+        }
+
+        function addSteam(plat) {
+            const hotCategories = ['Plats', 'Pizzas', 'Pâtes', 'Entrées', 'Végétarien', 'International'];
+            if (!hotCategories.includes(plat.category)) return;
+
+            const steamGroup = new THREE.Group();
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const geo = new THREE.SphereGeometry(0.02 + Math.random() * 0.03, 8, 8);
+                const mat = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.08 + Math.random() * 0.08
+                });
+                const particle = new THREE.Mesh(geo, mat);
+                particle.position.set(
+                    (Math.random() - 0.5) * 0.8,
+                    Math.random() * 0.5,
+                    (Math.random() - 0.5) * 0.8
+                );
+                particle.userData = {
+                    speed: 0.005 + Math.random() * 0.01,
+                    drift: (Math.random() - 0.5) * 0.003,
+                    startY: particle.position.y,
+                    maxHeight: 0.8 + Math.random() * 0.5
+                };
+                steamGroup.add(particle);
+            }
+
+            steamGroup.userData.isSteam = true;
+            scene.add(steamGroup);
         }
 
         function setupInteraction(canvas) {
@@ -1120,14 +1421,32 @@
             if (!renderer || !document.getElementById('viewer3d').classList.contains('active')) return;
             requestAnimationFrame(animate);
 
+            const time = Date.now() * 0.001;
+
             if (autoRotate && currentMesh) {
-                currentMesh.rotation.y += 0.008;
+                currentMesh.rotation.y += 0.005;
             }
 
-            // Subtle float
+            // Subtle float for food
             if (currentMesh) {
-                currentMesh.position.y = Math.sin(Date.now() * 0.001) * 0.05;
+                currentMesh.position.y = Math.sin(time * 0.8) * 0.02;
             }
+
+            // Animate steam particles
+            scene.children.forEach(child => {
+                if (child.isGroup && child.userData.isSteam) {
+                    child.children.forEach(particle => {
+                        const d = particle.userData;
+                        particle.position.y += d.speed;
+                        particle.position.x += d.drift;
+                        particle.material.opacity = 0.1 * (1 - (particle.position.y - d.startY) / d.maxHeight);
+                        if (particle.position.y > d.startY + d.maxHeight) {
+                            particle.position.y = d.startY;
+                            particle.position.x = (Math.random() - 0.5) * 0.8;
+                        }
+                    });
+                }
+            });
 
             renderer.render(scene, camera);
         }
@@ -1136,10 +1455,6 @@
         const origInit3D = init3D;
         init3D = function(plat) {
             origInit3D(plat);
-            currentMesh = scene.children.find(c => c.isMesh && c.geometry.type !== 'PlaneGeometry' && c.geometry.type !== 'TorusGeometry');
-            if (!currentMesh) {
-                currentMesh = scene.children.find(c => c.isMesh && c.geometry.type !== 'PlaneGeometry');
-            }
         };
 
         // Resize

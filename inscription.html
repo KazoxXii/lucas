@@ -134,6 +134,7 @@
                 name: name,
                 email: email,
                 restaurant: restaurant,
+                phone: '',
                 password: btoa(password),
                 createdAt: new Date().toISOString()
             };
@@ -141,16 +142,22 @@
             users.push(newUser);
             localStorage.setItem('vmp_users', JSON.stringify(users));
 
+            // Sauvegarder la session automatiquement
+            const sessionData = {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                restaurant: newUser.restaurant,
+                phone: newUser.phone,
+                loggedIn: true,
+                loginDate: new Date().toISOString()
+            };
+            localStorage.setItem('vmp_session', JSON.stringify(sessionData));
+
             successDiv.textContent = 'Compte cree avec succes ! Redirection...';
             successDiv.style.display = 'block';
 
             setTimeout(() => {
-                localStorage.setItem('vmp_session', JSON.stringify({
-                    id: newUser.id,
-                    name: newUser.name,
-                    email: newUser.email,
-                    restaurant: newUser.restaurant
-                }));
                 window.location.href = 'dashboard.html';
             }, 1500);
         });
