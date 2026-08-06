@@ -7,99 +7,334 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        html, body { margin: 0; padding: 0; height: 100%; background: #0a0a0a; overflow: hidden; }
-        body { font-family: 'Inter', sans-serif; }
-        #viewerContainer { position: fixed; inset: 0; }
-        canvas { display: block; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --noir: #0a0a0a;
+            --noir-card: #111111;
+            --jaune: #f5a623;
+            --jaune-clair: #fbbf24;
+            --blanc: #ffffff;
+            --gris: #999999;
+            --bordure: #222222;
+        }
+
+        html, body { height: 100%; background: var(--noir); overflow: hidden; }
+        body { font-family: 'Inter', -apple-system, sans-serif; color: var(--blanc); }
+
+        /* VIEWER FULLSCREEN */
+        .viewer-wrap {
+            position: fixed; inset: 0; display: flex; flex-direction: column;
+        }
+
         .viewer-topbar {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+            position: absolute; top: 0; left: 0; right: 0; z-index: 20;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 24px; background: rgba(10,10,10,0.8); backdrop-filter: blur(10px);
-            border-bottom: 1px solid #222;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(180deg, rgba(10,10,10,0.85) 0%, transparent 100%);
         }
-        .viewer-topbar .logo-text { font-size: 1.1rem; font-weight: 800; }
-        .viewer-dishes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+        .viewer-brand {
+            display: flex; align-items: center; gap: 0.5rem;
+            color: var(--blanc); text-decoration: none;
+        }
+
+        .viewer-brand img { height: 28px; border-radius: 4px; }
+        .viewer-brand .logo-text { font-size: 1.1rem; font-weight: 800; }
+        .viewer-brand .plus { color: var(--jaune); }
+
+        /* Dish selector pills */
+        .dish-pills {
+            display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+            max-width: 500px;
+        }
+
         .dish-pill {
-            padding: 8px 16px; border-radius: 100px; border: 1px solid #222;
-            background: #111; color: #999; cursor: pointer; font-size: 0.85rem;
-            transition: all 0.3s; user-select: none;
+            padding: 6px 14px; border-radius: 100px; border: 1px solid var(--bordure);
+            background: rgba(17,17,17,0.8); backdrop-filter: blur(8px);
+            color: var(--gris); cursor: pointer; font-size: 0.8rem;
+            transition: all 0.3s; user-select: none; white-space: nowrap;
         }
-        .dish-pill:hover { border-color: #f5a623; color: #fff; }
-        .dish-pill.active { background: #f5a623; color: #000; border-color: #f5a623; font-weight: 600; }
-        .viewer-controls {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 20; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+
+        .dish-pill:hover { border-color: var(--jaune); color: var(--blanc); }
+        .dish-pill.active { background: var(--jaune); color: #000; border-color: var(--jaune); font-weight: 600; }
+
+        /* model-viewer fills the screen */
+        .viewer-model {
+            flex: 1; width: 100%; position: relative;
         }
-        .mode-toggle {
-            display: flex; background: #111; border: 1px solid #222; border-radius: 100px; padding: 4px; overflow: hidden;
+
+        model-viewer {
+            width: 100%; height: 100%;
+            --poster-color: transparent;
+            outline: none;
         }
-        .mode-btn {
-            padding: 10px 20px; border: none; background: transparent; color: #999;
-            cursor: pointer; font-size: 0.9rem; border-radius: 100px; font-family: inherit; transition: all 0.3s;
+
+        /* Bottom info */
+        .viewer-bottom {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+            padding: 1.5rem 1.5rem 2rem;
+            background: linear-gradient(0deg, rgba(10,10,10,0.85) 0%, transparent 100%);
+            display: flex; justify-content: space-between; align-items: flex-end;
+            flex-wrap: wrap; gap: 1rem;
         }
-        .mode-btn.active { background: #f5a623; color: #000; font-weight: 600; }
-        .viewer-actions { position: fixed; bottom: 20px; right: 20px; z-index: 20; display: flex; gap: 8px; }
-        .icon-btn {
-            width: 48px; height: 48px; border-radius: 50%; border: 1px solid #222; background: #111;
-            color: #fff; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+
+        .dish-info h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.2rem; }
+        .dish-info .price { color: var(--jaune); font-size: 1.1rem; font-weight: 700; }
+        .dish-info .desc { color: var(--gris); font-size: 0.85rem; margin-top: 0.2rem; }
+
+        .viewer-actions { display: flex; gap: 8px; }
+
+        .action-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 1px solid var(--bordure); background: rgba(17,17,17,0.8);
+            backdrop-filter: blur(8px); color: var(--blanc);
+            font-size: 1.2rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.3s;
         }
-        .icon-btn:hover { border-color: #f5a623; }
-        .info-badge {
-            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-            z-index: 20; background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.3);
-            color: #f5a623; padding: 6px 18px; border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+
+        .action-btn:hover { border-color: var(--jaune); }
+        .action-btn.active { background: var(--jaune); color: #000; border-color: var(--jaune); }
+
+        .hint-badge {
+            position: absolute; top: 5.5rem; left: 50%; transform: translateX(-50%);
+            z-index: 20; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.25);
+            color: var(--jaune); padding: 6px 18px; border-radius: 100px;
+            font-size: 0.8rem; font-weight: 500; pointer-events: none;
         }
-        .dish-name-badge {
-            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-            z-index: 20; background: rgba(10,10,10,0.9); border: 1px solid #333;
-            color: #fff; padding: 12px 28px; border-radius: 14px; font-size: 1.2rem; font-weight: 700;
-            text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+
+        .no-model-msg {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 1rem; padding: 2rem; text-align: center;
         }
-        .dish-name-badge span { display: block; font-size: 0.8rem; color: #999; font-weight: 400; margin-top: 4px; }
-        .scan-hint {
-            position: fixed; top: 140px; left: 50%; transform: translateX(-50%); z-index: 20;
-            color: #555; font-size: 0.75rem; display: flex; align-items: center; gap: 6px;
+
+        .no-model-msg .icon { font-size: 3rem; opacity: 0.3; }
+        .no-model-msg h3 { font-size: 1.1rem; }
+        .no-model-msg p { color: var(--gris); font-size: 0.85rem; max-width: 300px; line-height: 1.5; }
+        .no-model-msg code {
+            background: rgba(245,166,35,0.1); color: var(--jaune);
+            padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
         }
+
         @media (max-width: 768px) {
-            .viewer-topbar { flex-direction: column; gap: 10px; padding: 12px 16px; }
-            .dish-pill { font-size: 0.75rem; padding: 7px 12px; }
-            .dish-name-badge { top: 120px; left: 16px; right: 16px; transform: none; font-size: 1rem; }
-            .scan-hint { top: 175px; }
-            .viewer-actions { right: 16px; bottom: 20px; }
-            .icon-btn { width: 42px; height: 42px; }
+            .viewer-topbar { flex-direction: column; gap: 8px; padding: 0.75rem 1rem; }
+            .dish-pills { max-width: 100%; }
+            .dish-pill { font-size: 0.7rem; padding: 5px 10px; }
+            .viewer-bottom { flex-direction: column; align-items: stretch; }
+            .hint-badge { top: 6rem; font-size: 0.7rem; }
         }
     </style>
 </head>
 <body>
+    <div class="viewer-wrap">
+        <!-- Top bar -->
+        <div class="viewer-topbar">
+            <a href="index.html" class="viewer-brand">
+                <img src="logo/IMG_5947.png" alt="VMP+">
+                <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
+            </a>
+            <div class="dish-pills" id="dishPills"></div>
+        </div>
 
-    <div id="viewerContainer"></div>
+        <div class="hint-badge" id="hintBadge">Glisse pour tourner · Pince pour zoomer</div>
 
-    <div class="viewer-topbar">
-        <a href="index.html" style="color:#fff;text-decoration:none;">
-            <span class="logo-icon">&#127869;</span> <span class="logo-text">VOIR MON PLAT<span class="plus">+</span></span>
-        </a>
-        <div class="viewer-dishes" id="dishSelector"></div>
-    </div>
+        <!-- model-viewer -->
+        <div class="viewer-model" id="viewerSlot"></div>
 
-    <div class="dish-name-badge" id="dishInfo">Burger Maison<span>Glissez pour faire tourner</span></div>
-    <div class="scan-hint">&#128241; Visible sur votre telephone - scannez le QR pour ouvrir</div>
+        <!-- No model fallback -->
+        <div class="no-model-msg" id="noModelMsg" style="display:none;">
+            <div class="icon">📦</div>
+            <h3>Aucun modèle 3D disponible</h3>
+            <p>Ajoutez un fichier <code>.glb</code> dans le dossier <code>models/</code> pour voir le plat ici.</p>
+        </div>
 
-    <div class="viewer-controls">
-        <div class="mode-toggle">
-            <button class="mode-btn" id="modeNormalBtn" onclick="setMode('normal')">3D normal</button>
-            <button class="mode-btn active" id="modeRealBtn" onclick="setMode('real')">Realiste</button>
+        <!-- Bottom -->
+        <div class="viewer-bottom">
+            <div class="dish-info">
+                <h2 id="dishName">Burger Maison</h2>
+                <div class="price" id="dishPrice">14,90 €</div>
+                <div class="desc" id="dishDesc">Steak Angus, cheddar affiné, légumes frais</div>
+            </div>
+            <div class="viewer-actions">
+                <button class="action-btn" id="btnAutoRotate" title="Auto-rotation" onclick="toggleAutoRotate()">🔄</button>
+                <button class="action-btn" id="btnReset" title="Réinitialiser" onclick="resetView()">↺</button>
+                <a href="scanner.html" class="action-btn" title="Scanner ce plat" style="text-decoration:none;">📷</a>
+            </div>
         </div>
     </div>
 
-    <div class="viewer-actions">
-        <button class="icon-btn" id="resetView" title="Reinitialiser la vue">&#8635;</button>
-        <button class="icon-btn" id="autoRotateBtn" title="Rotation auto">&#10227;</button>
-    </div>
+    <script>
+        const GLB_MODELS = {
+            1:'models/bruschetta.glb',2:'models/soupe-oignon.glb',3:'models/escargots.glb',
+            4:'models/tartare-saumon.glb',5:'models/foie-gras.glb',6:'models/carpaccio-boeuf.glb',
+            7:'models/gaspacho.glb',8:'models/veloute-potiron.glb',9:'models/risotto-cepes.glb',
+            10:'models/tartare-avocat.glb',11:'models/burger-maison.glb',12:'models/pizza-truffe.glb',
+            13:'models/filet-boeuf.glb',14:'models/crevettes-grillees.glb',15:'models/poulet-roti.glb',
+            16:'models/saucisse-toulouse.glb',17:'models/magret-canard.glb',18:'models/risotto-fruits-mer.glb',
+            19:'models/rack-agneau.glb',20:'models/pave-bar.glb',21:'models/duo-filets.glb',
+            22:'models/couscous-royal.glb',23:'models/paella.glb',24:'models/steak-tartare.glb',
+            25:'models/sushi-plateau.glb',26:'models/chili-con-carne.glb',27:'models/fish-chips.glb',
+            28:'models/roti-porc.glb',29:'models/pad-thai.glb',30:'models/gratin-dauphinois.glb',
+            31:'models/pizza-margherita.glb',32:'models/pizza-pepperoni.glb',33:'models/pizza-quattro-formaggi.glb',
+            34:'models/pizza-vegetarienne.glb',35:'models/pizza-reine.glb',36:'models/spaghetti-bolognaise.glb',
+            37:'models/pates-carbonara.glb',38:'models/ravioli-epinards.glb',39:'models/penne-arrabbiata.glb',
+            40:'models/lasagnes.glb',41:'models/salade-caesar.glb',42:'models/salade-nicoise.glb',
+            43:'models/salade-chevre-chaud.glb',44:'models/salade-asiatique.glb',45:'models/taboule-libanais.glb',
+            46:'models/club-sandwich.glb',47:'models/panini.glb',48:'models/tacos.glb',
+            49:'models/kebab.glb',50:'models/banh-mi.glb',51:'models/saumon-grille.glb',
+            52:'models/sole-meuniere.glb',53:'models/ceviche.glb',54:'models/thon-teriyaki.glb',
+            55:'models/bouillabaisse.glb',56:'models/buddha-bowl.glb',57:'models/curry-legumes.glb',
+            58:'models/omelette-champignons.glb',59:'models/risotto-champignons.glb',60:'models/flammekueche.glb',
+            61:'models/tiramisu.glb',62:'models/glace-artisanale.glb',63:'models/creme-brulee.glb',
+            64:'models/fondant-chocolat.glb',65:'models/tarte-tatin.glb',66:'models/mousse-chocolat.glb',
+            67:'models/profiteroles.glb',68:'models/crepes-suzette.glb',69:'models/panna-cotta.glb',
+            70:'models/ile-flottante.glb',71:'models/berlingots.glb',72:'models/macarons.glb',
+            73:'models/fruit-passion.glb',74:'models/spherifications.glb',75:'models/torched-meringue.glb',
+            76:'models/mojito.glb',77:'models/smoothie-tropical.glb',78:'models/limonade.glb',
+            79:'models/espresso.glb',80:'models/the-vert.glb',81:'models/jus-orange.glb',
+            82:'models/milkshake-oreo.glb',83:'models/chai-latte.glb',84:'models/soda-artisanal.glb',
+            85:'models/biere-craft.glb',86:'models/vin-rouge.glb',87:'models/champagne.glb',
+            88:'models/aperol-spritz.glb',89:'models/frites-maison.glb',90:'models/legumes-grilles.glb',
+            91:'models/riz-basmati.glb',92:'models/pdt-vapeur.glb',93:'models/puree-pdt.glb',
+            94:'models/sauce-poivre.glb',95:'models/sauce-bearnaise.glb',96:'models/sauce-tomate.glb',
+            97:'models/sauce-champignons.glb',98:'models/guacamole.glb',99:'models/tacos-mexicain.glb',
+            100:'models/ramen.glb',101:'models/tikka-masala.glb',102:'models/falafels.glb',
+            103:'models/shawarma.glb',104:'models/pho.glb',105:'models/bibimbap.glb',
+            106:'models/couscous-royal-intl.glb',107:'models/burger-gourmet.glb',108:'models/fish-tacos.glb'
+        };
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="viewer3d.js"></script>
+        const plats = [
+            {id:1,name:'Bruschetta',price:'8,50 €',desc:'Tomates fraîches, basilic, huile d\'olive',emoji:'🍞',category:'Entrées'},
+            {id:2,name:'Soupe à l\'oignon',price:'9,00 €',desc:'Oignons caramélisés, gruyère fondant',emoji:'🍲',category:'Entrées'},
+            {id:3,name:'Escargots de Bourgogne',price:'14,00 €',desc:'6 pièces, beurre à l\'ail, persil',emoji:'🐌',category:'Entrées'},
+            {id:4,name:'Tartare de saumon',price:'16,00 €',desc:'Saumon frais, avocat, citron vert',emoji:'🐟',category:'Entrées'},
+            {id:5,name:'Foie gras maison',price:'18,00 €',desc:'Foie gras mi-cuit, brioche toastée',emoji:'🍞',category:'Entrées'},
+            {id:6,name:'Carpaccio de bœuf',price:'15,00 €',desc:'Tranches fines, roquette, parmesan',emoji:'🥩',category:'Entrées'},
+            {id:7,name:'Gaspacho andalou',price:'8,00 €',desc:'Tomates, concombre, poivron',emoji:'🍅',category:'Entrées'},
+            {id:8,name:'Velouté de potiron',price:'9,50 €',desc:'Potiron rôti, crème d\'épinards',emoji:'🎃',category:'Entrées'},
+            {id:9,name:'Risotto aux cèpes',price:'13,00 €',desc:'Riz arborio, cèpes frais, parmesan',emoji:'🍚',category:'Entrées'},
+            {id:10,name:'Tartare d\'avocat',price:'11,00 €',desc:'Avocat frais, crevettes, mangue',emoji:'🥑',category:'Entrées'},
+            {id:11,name:'Burger Maison',price:'14,90 €',desc:'Steak Angus, cheddar affiné, légumes frais',emoji:'🍔',category:'Plats'},
+            {id:12,name:'Pizza Truffe',price:'18,50 €',desc:'Mozzarella di bufala, crème de truffe',emoji:'🍕',category:'Plats'},
+            {id:13,name:'Filet de Bœuf',price:'28,00 €',desc:'Filet mignon, sauce au poivre',emoji:'🥩',category:'Plats'},
+            {id:14,name:'Crevettes Grillées',price:'22,00 €',desc:'Crevettes royales, beurre d\'ail',emoji:'🍤',category:'Plats'},
+            {id:15,name:'Poulet rôti',price:'16,50 €',desc:'Poulet fermier, herbes de Provence',emoji:'🍗',category:'Plats'},
+            {id:16,name:'Saucisse de Toulouse',price:'15,00 €',desc:'Saucisse artisanale, lentilles',emoji:'🌭',category:'Plats'},
+            {id:17,name:'Magret de canard',price:'24,00 €',desc:'Canard laqué, sauce bigarade',emoji:'🦆',category:'Plats'},
+            {id:18,name:'Risotto aux fruits de mer',price:'22,50 €',desc:'Crevettes, moules, safran',emoji:'🦐',category:'Plats'},
+            {id:19,name:'Rack d\'agneau',price:'32,00 €',desc:'Agneau de Lozère, crustade d\'amande',emoji:'🍖',category:'Plats'},
+            {id:20,name:'Pavé de bar',price:'26,00 €',desc:'Bar de ligne, beurre blanc',emoji:'🐟',category:'Plats'},
+            {id:21,name:'Duo de filets',price:'34,00 €',desc:'Filet de bœuf et sandre, sauce truffe',emoji:'🥩',category:'Plats'},
+            {id:22,name:'Couscous royal',price:'18,00 €',desc:'Agneau, merguez, poulet, semoule',emoji:'🍲',category:'Plats'},
+            {id:23,name:'Paella valenciana',price:'24,00 €',desc:'Crevettes, palourdes, safran',emoji:'🥘',category:'Plats'},
+            {id:24,name:'Steak tartare',price:'19,00 €',desc:'Bœuf haché cru, jaune d\'œuf',emoji:'🥩',category:'Plats'},
+            {id:25,name:'Sushi Plateau',price:'24,50 €',desc:'12 pièces, sashimi, edamame',emoji:'🍣',category:'Plats'},
+            {id:26,name:'Chili con carne',price:'16,00 €',desc:'Bœuf haché, haricots rouges, piment',emoji:'🌶️',category:'Plats'},
+            {id:27,name:'Fish and chips',price:'17,50 €',desc:'Cabillaud pané, frites maison',emoji:'🐟',category:'Plats'},
+            {id:28,name:'Rôti de porc',price:'18,00 €',desc:'Porc fermier, sauce pomme',emoji:'🥩',category:'Plats'},
+            {id:29,name:'Pad thaï',price:'16,50 €',desc:'Nouilles de riz, crevettes',emoji:'🍜',category:'Plats'},
+            {id:30,name:'Gratin dauphinois',price:'14,00 €',desc:'Pommes de terre, crème fraîche',emoji:'🧀',category:'Plats'},
+            {id:61,name:'Tiramisu',price:'9,50 €',desc:'Mascarpone, café expresso, cacao',emoji:'🍰',category:'Desserts'},
+            {id:62,name:'Glace Artisanale',price:'7,50 €',desc:'3 boules, coulis chocolat',emoji:'🍨',category:'Desserts'},
+            {id:63,name:'Crème brûlée',price:'10,00 €',desc:'Crème vanille, caramel croustillant',emoji:'🍮',category:'Desserts'},
+            {id:64,name:'Fondant au chocolat',price:'11,00 €',desc:'Chocolat Valrhona, cœur coulant',emoji:'🍫',category:'Desserts'},
+            {id:76,name:'Cocktail Mojito',price:'10,00 €',desc:'Rhum blanc, menthe, citron vert',emoji:'🍹',category:'Boissons'},
+            {id:85,name:'Bière craft IPA',price:'8,00 €',desc:'Bière artisanale, notes d\'agrumes',emoji:'🍺',category:'Boissons'},
+            {id:86,name:'Vin rouge Bordeaux',price:'12,00 €',desc:'Cuvée prestige, tanins soyeux',emoji:'🍷',category:'Boissons'},
+            {id:87,name:'Champagne brut',price:'15,00 €',desc:'Prestige, bulles fines',emoji:'🥂',category:'Boissons'},
+            {id:100,name:'Ramen japonais',price:'16,00 €',desc:'Bouillon tonkotsu, noodles',emoji:'🍜',category:'International'},
+            {id:107,name:'Burger gourmet',price:'19,00 €',desc:'Wagyu, truffe, cheddar affiné',emoji:'🍔',category:'International'},
+        ];
+
+        let currentMV = null;
+        let currentPlat = plats.find(p => p.id === 11) || plats[0]; // Default: Burger
+
+        function init() {
+            buildPills();
+            loadPlat(currentPlat);
+        }
+
+        function buildPills() {
+            const container = document.getElementById('dishPills');
+            container.innerHTML = plats.map(p =>
+                `<div class="dish-pill ${p.id === currentPlat.id ? 'active' : ''}" data-id="${p.id}" onclick="selectPlat(${p.id})">${p.emoji} ${p.name}</div>`
+            ).join('');
+        }
+
+        function selectPlat(id) {
+            currentPlat = plats.find(p => p.id === id);
+            if (!currentPlat) return;
+            document.querySelectorAll('.dish-pill').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.dish-pill[data-id="${id}"]`)?.classList.add('active');
+            loadPlat(currentPlat);
+        }
+
+        function loadPlat(plat) {
+            document.getElementById('dishName').textContent = plat.name;
+            document.getElementById('dishPrice').textContent = plat.price;
+            document.getElementById('dishDesc').textContent = plat.desc;
+
+            const slot = document.getElementById('viewerSlot');
+            const noModel = document.getElementById('noModelMsg');
+            slot.innerHTML = '';
+            noModel.style.display = 'none';
+
+            const glbPath = GLB_MODELS[plat.id];
+            if (!glbPath) {
+                noModel.style.display = 'flex';
+                return;
+            }
+
+            const mv = document.createElement('model-viewer');
+            mv.setAttribute('src', glbPath);
+            mv.setAttribute('alt', 'Vue 3D de ' + plat.name);
+            mv.setAttribute('camera-controls', '');
+            mv.setAttribute('touch-action', 'pan-y');
+            mv.setAttribute('auto-rotate', '');
+            mv.setAttribute('auto-rotate-delay', '1000');
+            mv.setAttribute('rotation-per-second', '25deg');
+            mv.setAttribute('shadow-intensity', '1.2');
+            mv.setAttribute('shadow-softness', '0.5');
+            mv.setAttribute('exposure', '1.1');
+            mv.setAttribute('environment-image', 'neutral');
+            mv.setAttribute('camera-orbit', '45deg 55deg 2.5m');
+            mv.setAttribute('min-camera-orbit', 'auto auto 1.5m');
+            mv.setAttribute('max-camera-orbit', 'Infinity Infinity 5m');
+            mv.style.cssText = 'width:100%;height:100%;background:radial-gradient(ellipse at center,#181818 0%,#0a0a0a 100%);';
+
+            mv.addEventListener('error', () => {
+                slot.innerHTML = '';
+                noModel.style.display = 'flex';
+            });
+
+            slot.appendChild(mv);
+            currentMV = mv;
+        }
+
+        function toggleAutoRotate() {
+            if (!currentMV) return;
+            const btn = document.getElementById('btnAutoRotate');
+            if (currentMV.autoRotate) {
+                currentMV.removeAttribute('auto-rotate');
+                btn.classList.remove('active');
+            } else {
+                currentMV.setAttribute('auto-rotate', '');
+                btn.classList.add('active');
+            }
+        }
+
+        function resetView() {
+            if (!currentMV) return;
+            currentMV.cameraOrbit = '45deg 55deg 2.5m';
+            currentMV.cameraTarget = '0m 0m 0m';
+        }
+
+        init();
+    </script>
 </body>
 </html>

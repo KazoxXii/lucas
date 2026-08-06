@@ -7,20 +7,22 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background: #0a0a0a;
+            background: #000;
             color: #fff;
             min-height: 100vh;
             overflow: hidden;
+            touch-action: none;
+            user-select: none;
         }
 
-        /* CAMERA VIEW */
-        .scanner-container {
+        /* CAMERA FEED */
+        .camera-container {
             position: fixed;
             inset: 0;
             background: #000;
@@ -32,28 +34,63 @@
             object-fit: cover;
         }
 
-        .scanner-overlay {
+        /* SCAN OVERLAY */
+        .scan-overlay {
             position: absolute;
             inset: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             pointer-events: none;
+            z-index: 10;
         }
 
-        .scanner-frame {
-            width: 280px;
-            height: 280px;
+        .scan-topbar {
+            padding: 1.25rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            pointer-events: auto;
+        }
+
+        .scan-back {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: none; color: #fff; font-size: 1.2rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .scan-back:hover { background: rgba(255,255,255,0.2); }
+
+        .scan-title-area { text-align: center; }
+        .scan-title { font-weight: 700; font-size: 1rem; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+        .scan-subtitle { font-size: 0.7rem; color: #f5a623; font-weight: 500; margin-top: 0.15rem; }
+
+        .scan-menu-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: none; color: #fff; font-size: 1.2rem; cursor: pointer;
+        }
+
+        .scan-menu-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* SCANNER FRAME */
+        .scanner-frame-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
         }
 
+        .scanner-frame {
+            width: 280px; height: 280px; position: relative;
+        }
+
         .scanner-corner {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-color: #f5a623;
-            border-style: solid;
+            position: absolute; width: 40px; height: 40px;
+            border-color: #f5a623; border-style: solid;
+            transition: border-color 0.3s;
         }
 
         .scanner-corner.tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 8px 0 0 0; }
@@ -61,465 +98,424 @@
         .scanner-corner.bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 8px; }
         .scanner-corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 8px 0; }
 
+        .scanner-frame.complete .scanner-corner { border-color: #22c55e; }
+
         .scanner-line {
-            position: absolute;
-            left: 10px;
-            right: 10px;
-            height: 2px;
+            position: absolute; left: 10px; right: 10px; height: 2px;
             background: linear-gradient(90deg, transparent, #f5a623, transparent);
-            box-shadow: 0 0 15px rgba(245, 166, 35, 0.6);
+            box-shadow: 0 0 15px rgba(245,166,35,0.6);
             animation: scanLine 2s ease-in-out infinite;
         }
 
-        @keyframes scanLine {
-            0%, 100% { top: 10px; }
-            50% { top: calc(100% - 10px); }
+        .scanner-frame.complete .scanner-line {
+            background: linear-gradient(90deg, transparent, #22c55e, transparent);
+            box-shadow: 0 0 15px rgba(34,197,94,0.6);
+            animation: none; top: 50%;
         }
 
-        .scanner-text {
-            margin-top: 2rem;
-            font-size: 1rem;
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            text-align: center;
+        @keyframes scanLine { 0%,100%{top:10px} 50%{top:calc(100% - 10px)} }
+
+        /* CENTER PROGRESS RING */
+        .scan-progress-ring {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none; z-index: 15;
         }
 
-        .scanner-text span {
-            color: #f5a623;
-            font-weight: 600;
+        .ring-svg {
+            width: 140px; height: 140px;
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 12px rgba(245,166,35,0.4));
         }
 
-        /* TOP BAR */
-        .scanner-topbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
-            z-index: 10;
+        .ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 3; }
+        .ring-fill {
+            fill: none; stroke: #f5a623; stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 376.99; stroke-dashoffset: 376.99;
+            transition: stroke-dashoffset 0.15s linear;
         }
 
-        .scanner-back {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: none;
-            color: #fff;
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
+        .ring-info {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
 
-        .scanner-back:hover { background: rgba(255,255,255,0.2); }
-
-        .scanner-title {
-            font-weight: 700;
-            font-size: 1rem;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        .ring-degrees {
+            font-size: 2rem; font-weight: 900; color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8); line-height: 1;
         }
 
-        .scanner-flash {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: none;
-            color: #fff;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s;
+        .ring-degrees span { font-size: 0.9rem; color: #f5a623; }
+
+        .ring-percent {
+            font-size: 0.65rem; color: #f5a623; font-weight: 600;
+            font-family: monospace; margin-top: 0.15rem;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.8);
         }
 
-        .scanner-flash.active { background: #f5a623; color: #000; }
-
-        /* BOTTOM CONTROLS */
-        .scanner-bottom {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 2rem 1rem 3rem;
-            background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
+        /* BOTTOM */
+        .scan-bottom {
+            padding: 1rem 1.5rem 3rem;
+            background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+            pointer-events: auto;
         }
 
-        .scan-btn {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: transparent;
-            border: 4px solid #fff;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s;
+        .scan-instruction { text-align: center; margin-bottom: 1rem; }
+
+        .scan-instruction-main {
+            font-size: 1rem; font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
-        .scan-btn::after {
-            content: '';
-            position: absolute;
-            inset: 6px;
-            background: #fff;
-            border-radius: 50%;
-            transition: all 0.3s;
+        .scan-instruction-sub {
+            font-size: 0.8rem; color: #aaa; margin-top: 0.2rem;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.6);
         }
 
-        .scan-btn:active::after {
-            background: #f5a623;
-            transform: scale(0.9);
+        .scan-instruction-sub span { color: #f5a623; font-weight: 600; }
+
+        .scan-bar-container {
+            background: rgba(255,255,255,0.1); border-radius: 6px;
+            height: 5px; overflow: hidden; margin-bottom: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .scan-btn.scanning {
-            border-color: #f5a623;
+        .scan-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #f5a623, #fbbf24);
+            border-radius: 6px; transition: width 0.15s linear;
+            box-shadow: 0 0 8px rgba(245,166,35,0.4);
+        }
+
+        .scan-stats { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+
+        .scan-stat {
+            flex: 1; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+            padding: 0.5rem 0.3rem; text-align: center;
+        }
+
+        .scan-stat-value { font-size: 0.9rem; font-weight: 800; font-family: monospace; color: #f5a623; }
+        .scan-stat-value.white { color: #fff; }
+        .scan-stat-value.green { color: #22c55e; }
+        .scan-stat-label { font-size: 0.5rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.1rem; }
+
+        .flash-btn {
+            position: absolute; top: 5.5rem; right: 1rem;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: none; color: #fff; font-size: 1.1rem; cursor: pointer; z-index: 20;
+        }
+
+        .flash-btn.active { background: #f5a623; color: #000; }
+
+        .drag-hint {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.5rem; padding: 0.5rem 1rem;
+            background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.25);
+            border-radius: 20px; margin: 0 auto; width: fit-content;
+            animation: hintPulse 2s ease-in-out infinite;
+        }
+
+        .drag-hint-text { font-size: 0.75rem; color: #f5a623; font-weight: 600; }
+        .drag-hint-arrows { font-size: 0.9rem; animation: dragArrow 1.5s ease-in-out infinite; }
+
+        @keyframes hintPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes dragArrow { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+        /* AUTO-SCAN BUTTON */
+        .auto-scan-btn {
+            position: absolute; bottom: 11rem; left: 50%; transform: translateX(-50%);
+            background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.4);
+            color: #f5a623; padding: 0.5rem 1.25rem; border-radius: 25px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; z-index: 20;
+            backdrop-filter: blur(8px); pointer-events: auto; transition: all 0.3s;
+        }
+
+        .auto-scan-btn:hover { background: rgba(245,166,35,0.25); border-color: #f5a623; }
+
+        .auto-scan-btn.scanning {
+            background: rgba(245,166,35,0.3); border-color: #f5a623;
             animation: pulseBtn 1.5s ease-in-out infinite;
         }
 
-        @keyframes pulseBtn {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        @keyframes pulseBtn { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.03)} }
+
+        /* SUCCESS */
+        .scan-success {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; z-index: 200; gap: 1.5rem;
         }
 
-        .scan-options {
-            display: flex;
-            gap: 2rem;
+        .scan-success.active { display: flex; }
+
+        .success-icon {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px rgba(34,197,94,0.3);
         }
 
-        .scan-option {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.3rem;
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 0.75rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-        }
+        @keyframes successPop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
 
-        .scan-option:hover { opacity: 1; }
-        .scan-option .icon { font-size: 1.5rem; }
+        .success-title { font-size: 1.5rem; font-weight: 800; }
+        .success-sub { color: #888; font-size: 0.9rem; }
+        .success-sub span { color: #f5a623; font-weight: 600; }
 
-        /* 3D VIEWER */
-        .viewer-3d {
-            position: fixed;
-            inset: 0;
-            background: #0a0a0a;
-            display: none;
-            z-index: 100;
-        }
-
-        .viewer-3d.active { display: block; }
-
-        #viewer3dCanvas {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-
-        .viewer-topbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
-            z-index: 10;
-        }
-
-        .viewer-close {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: none;
-            color: #fff;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        .viewer-title {
-            font-weight: 700;
-        }
-
-        .viewer-bottom {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 1.5rem 1rem 3rem;
-            background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
-            z-index: 10;
-        }
-
-        .dish-info {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .dish-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .dish-price {
-            color: #f5a623;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .dish-desc {
-            color: #999;
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-        }
-
-        .viewer-controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .viewer-ctrl-btn {
-            padding: 0.7rem 1.5rem;
-            border-radius: 25px;
-            border: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .viewer-ctrl-btn.primary {
-            background: #f5a623;
-            color: #000;
-        }
-
-        .viewer-ctrl-btn.secondary {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .rotation-hint {
-            text-align: center;
-            color: #666;
-            font-size: 0.8rem;
-            margin-top: 0.75rem;
-        }
-
-        /* LOADING */
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(10,10,10,0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 1.5rem;
-            z-index: 200;
-        }
-
-        .loading-overlay.active { display: flex; }
-
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 3px solid #222;
-            border-top-color: #f5a623;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .success-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #222; border-top-color: #f5a623;
+            border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 1rem;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .loading-text {
-            color: #999;
-            font-size: 0.9rem;
+        /* ==================== 3D VIEWER (model-viewer) ==================== */
+        .viewer-3d {
+            position: fixed; inset: 0; background: #0a0a0a;
+            display: none; z-index: 100; flex-direction: column;
+        }
+
+        .viewer-3d.active { display: flex; }
+
+        .viewer-topbar {
+            padding: 1.25rem 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+            z-index: 10; position: absolute; top: 0; left: 0; right: 0;
+        }
+
+        .viewer-close {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            border: none; color: #fff; font-size: 1.2rem; cursor: pointer;
+        }
+
+        .viewer-title { font-weight: 700; }
+
+        .viewer-model-container {
+            flex: 1; width: 100%; position: relative;
+        }
+
+        model-viewer {
+            width: 100%; height: 100%;
+            --poster-color: transparent;
+            outline: none;
+        }
+
+        .viewer-bottom {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 1.5rem 1rem 2.5rem;
+            background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+            z-index: 10;
+        }
+
+        .dish-info { text-align: center; margin-bottom: 0.75rem; }
+        .dish-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .dish-price { color: #f5a623; font-size: 1.1rem; font-weight: 600; }
+        .dish-desc { color: #999; font-size: 0.85rem; margin-top: 0.25rem; }
+
+        .viewer-controls { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+
+        .viewer-ctrl-btn {
+            padding: 0.6rem 1.25rem; border-radius: 25px;
+            border: none; font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s;
+        }
+
+        .viewer-ctrl-btn.primary { background: #f5a623; color: #000; }
+        .viewer-ctrl-btn.secondary { background: rgba(255,255,255,0.1); color: #fff; }
+        .viewer-ctrl-btn.secondary.active { background: rgba(245,166,35,0.3); color: #f5a623; }
+
+        .viewer-hint {
+            text-align: center; color: #555; font-size: 0.75rem; margin-top: 0.75rem;
+        }
+
+        /* No model fallback */
+        .no-model-msg {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 1rem; padding: 2rem; text-align: center;
+        }
+
+        .no-model-msg .icon { font-size: 3rem; opacity: 0.3; }
+        .no-model-msg h3 { color: #fff; font-size: 1.1rem; }
+        .no-model-msg p { color: #666; font-size: 0.85rem; max-width: 300px; line-height: 1.5; }
+        .no-model-msg code {
+            background: rgba(245,166,35,0.1); color: #f5a623;
+            padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
         }
 
         /* PLAT LIST */
         .plat-list-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(10,10,10,0.95);
-            display: none;
-            z-index: 150;
-            flex-direction: column;
+            position: fixed; inset: 0; background: rgba(10,10,10,0.97);
+            display: none; z-index: 150; flex-direction: column;
         }
 
         .plat-list-overlay.active { display: flex; }
 
         .plat-list-header {
             padding: 1.5rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid #222;
         }
 
         .plat-list-header h2 { font-size: 1.2rem; }
 
         .plat-list-close {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #1a1a1a;
-            border: none;
-            color: #fff;
-            font-size: 1.2rem;
-            cursor: pointer;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #1a1a1a; border: none; color: #fff;
+            font-size: 1.2rem; cursor: pointer;
         }
 
-        .plat-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
+        .plat-list { flex: 1; overflow-y: auto; padding: 1rem; }
 
         .plat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;
         }
 
         .plat-card {
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s;
+            background: #111; border: 1px solid #222; border-radius: 12px;
+            overflow: hidden; cursor: pointer; transition: all 0.3s;
         }
 
-        .plat-card:hover {
-            border-color: #f5a623;
-            transform: translateY(-2px);
-        }
+        .plat-card:hover { border-color: #f5a623; transform: translateY(-2px); }
 
         .plat-card-img {
-            width: 100%;
-            aspect-ratio: 1;
-            background: #1a1a1a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
+            width: 100%; aspect-ratio: 1; background: #1a1a1a;
+            display: flex; align-items: center; justify-content: center; font-size: 3rem;
         }
 
-        .plat-card-info {
-            padding: 0.75rem;
+        .plat-card-info { padding: 0.75rem; }
+        .plat-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+        .plat-card-price { color: #f5a623; font-weight: 700; font-size: 0.85rem; }
+        .plat-card-desc { color: #666; font-size: 0.75rem; margin-top: 0.2rem; }
+        .plat-card-badge {
+            display: inline-block; font-size: 0.6rem; font-weight: 600;
+            background: rgba(245,166,35,0.15); color: #f5a623;
+            padding: 0.1rem 0.4rem; border-radius: 4px; margin-top: 0.3rem;
         }
 
-        .plat-card-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.2rem;
-        }
-
-        .plat-card-price {
-            color: #f5a623;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
-
-        .plat-card-desc {
-            color: #666;
-            font-size: 0.75rem;
-            margin-top: 0.2rem;
-        }
-
-        /* CATEGORY FILTERS */
         .cat-btn {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: #999;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
+            background: #1a1a1a; border: 1px solid #333; color: #999;
+            padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.8rem;
+            font-weight: 500; cursor: pointer; transition: all 0.3s;
         }
 
         .cat-btn:hover { border-color: #f5a623; color: #fff; }
-
-        .cat-btn.active {
-            background: #f5a623;
-            border-color: #f5a623;
-            color: #000;
-            font-weight: 600;
-        }
+        .cat-btn.active { background: #f5a623; border-color: #f5a623; color: #000; font-weight: 600; }
     </style>
 </head>
 <body>
 
     <!-- CAMERA SCANNER -->
-    <div class="scanner-container" id="scannerView">
-        <video id="cameraFeed" autoplay playsinline></video>
+    <div class="camera-container" id="scannerView">
+        <video id="cameraFeed" autoplay playsinline muted></video>
 
-        <div class="scanner-topbar">
-            <button class="scanner-back" onclick="history.back()">←</button>
-            <span class="scanner-title">Scanner un plat</span>
-            <button class="scanner-flash" id="flashBtn" onclick="toggleFlash()">⚡</button>
-        </div>
-
-        <div class="scanner-overlay">
-            <div class="scanner-frame">
-                <div class="scanner-corner tl"></div>
-                <div class="scanner-corner tr"></div>
-                <div class="scanner-corner bl"></div>
-                <div class="scanner-corner br"></div>
-                <div class="scanner-line"></div>
+        <div class="scan-overlay">
+            <div class="scan-topbar">
+                <button class="scan-back" onclick="history.back()">←</button>
+                <div class="scan-title-area">
+                    <div class="scan-title">Scan 360°</div>
+                    <div class="scan-subtitle">VOIR MON PLAT+</div>
+                </div>
+                <button class="scan-menu-btn" onclick="showPlatList()">📋</button>
             </div>
-            <div class="scanner-text">Placez le plat <span>dans le cadre</span></div>
-        </div>
 
-        <div class="scanner-bottom">
-            <div class="scan-options">
-                <button class="scan-option" onclick="showPlatList()">
-                    <span class="icon">📋</span>
-                    <span>Menu</span>
-                </button>
-                <button class="scan-option" onclick="simulateScan()">
-                    <span class="icon">🎯</span>
-                    <span>Demo scan</span>
-                </button>
-                <button class="scan-option" onclick="switchCamera()">
-                    <span class="icon">🔄</span>
-                    <span>Camera</span>
-                </button>
+            <div class="scanner-frame-area">
+                <div class="scanner-frame" id="scannerFrame">
+                    <div class="scanner-corner tl"></div>
+                    <div class="scanner-corner tr"></div>
+                    <div class="scanner-corner bl"></div>
+                    <div class="scanner-corner br"></div>
+                    <div class="scanner-line" id="scannerLine"></div>
+                </div>
+
+                <div class="scan-progress-ring">
+                    <svg class="ring-svg" viewBox="0 0 140 140">
+                        <circle class="ring-bg" cx="70" cy="70" r="60"/>
+                        <circle class="ring-fill" id="progressRing" cx="70" cy="70" r="60"/>
+                    </svg>
+                    <div class="ring-info">
+                        <div class="ring-degrees" id="degreeText">0<span>°</span></div>
+                        <div class="ring-percent" id="percentText">0%</div>
+                    </div>
+                </div>
             </div>
-            <button class="scan-btn" id="scanBtn" onclick="simulateScan()"></button>
+
+            <button class="flash-btn" id="flashBtn" onclick="toggleFlash()">⚡</button>
+            <button class="auto-scan-btn" id="autoScanBtn" onclick="toggleAutoScan()">▶ Scan automatique</button>
+
+            <div class="scan-bottom">
+                <div class="scan-instruction">
+                    <div class="scan-instruction-main" id="instructionMain">Placez le plat dans le cadre</div>
+                    <div class="scan-instruction-sub" id="instructionSub">Faites le tour du plat à <span>360°</span></div>
+                </div>
+
+                <div class="scan-bar-container">
+                    <div class="scan-bar-fill" id="scanBarFill"></div>
+                </div>
+
+                <div class="scan-stats">
+                    <div class="scan-stat">
+                        <div class="scan-stat-value" id="statAngle">0°</div>
+                        <div class="scan-stat-label">Rotation</div>
+                    </div>
+                    <div class="scan-stat">
+                        <div class="scan-stat-value white" id="statPoints">0</div>
+                        <div class="scan-stat-label">Points 3D</div>
+                    </div>
+                    <div class="scan-stat">
+                        <div class="scan-stat-value green" id="statStatus">En attente</div>
+                        <div class="scan-stat-label">Status</div>
+                    </div>
+                    <div class="scan-stat">
+                        <div class="scan-stat-value" id="statRes">360°</div>
+                        <div class="scan-stat-label">Cible</div>
+                    </div>
+                </div>
+
+                <div class="drag-hint" id="dragHint">
+                    <span class="drag-hint-arrows">←</span>
+                    <span class="drag-hint-text">Glissez ou tournez autour du plat</span>
+                    <span class="drag-hint-arrows">→</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 3D VIEWER -->
-    <div class="viewer-3d" id="viewer3d">
-        <canvas id="viewer3dCanvas"></canvas>
+    <!-- SUCCESS -->
+    <div class="scan-success" id="scanSuccess">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Scan 360° terminé !</div>
+        <div class="success-sub">Plat capturé sous <span>tous les angles</span></div>
+        <div class="success-spinner"></div>
+    </div>
 
+    <!-- ==================== 3D VIEWER (model-viewer) ==================== -->
+    <div class="viewer-3d" id="viewer3d">
         <div class="viewer-topbar">
             <button class="viewer-close" onclick="closeViewer()">×</button>
             <span class="viewer-title">Vision 360°</span>
             <div style="width:40px;"></div>
+        </div>
+
+        <div class="viewer-model-container">
+            <!-- model-viewer sera injecté ici dynamiquement -->
+            <div id="modelViewerSlot"></div>
+
+            <!-- Message si pas de modèle GLB -->
+            <div class="no-model-msg" id="noModelMsg" style="display:none;">
+                <div class="icon">📦</div>
+                <h3>Aucun modèle 3D disponible</h3>
+                <p>Pour afficher ce plat en 3D, ajoutez un fichier <code>.glb</code> scanné avec <strong>Scaniverse</strong> dans le dossier <code>models/</code></p>
+                <p style="margin-top:0.5rem;font-size:0.75rem;color:#444;">Nom du fichier attendu : <code id="expectedFileName">—</code></p>
+            </div>
         </div>
 
         <div class="viewer-bottom">
@@ -529,10 +525,11 @@
                 <div class="dish-desc" id="dishDesc">Steak Angus, cheddar affiné, légumes frais</div>
             </div>
             <div class="viewer-controls">
-                <button class="viewer-ctrl-btn secondary" onclick="toggleAutoRotate()">🔄 Auto-rotation</button>
-                <button class="viewer-ctrl-btn primary" onclick="closeViewer()">📸 Prendre en photo</button>
+                <button class="viewer-ctrl-btn secondary" id="btnAutoRotate" onclick="toggleAutoRotate()">🔄 Auto-rotation</button>
+                <button class="viewer-ctrl-btn secondary" id="btnResetView" onclick="resetView()">↺ Reset</button>
+                <button class="viewer-ctrl-btn primary" onclick="closeViewer()">✓ Terminé</button>
             </div>
-            <div class="rotation-hint">Glisse pour tourner le plat en 360°</div>
+            <div class="viewer-hint">Glisse pour tourner · Pince pour zoomer</div>
         </div>
     </div>
 
@@ -546,179 +543,285 @@
             <input type="text" id="platSearch" placeholder="🔍 Rechercher un plat..." oninput="searchPlats()" style="width:100%;padding:0.7rem 1rem;background:#1a1a1a;border:1px solid #333;border-radius:10px;color:#fff;font-size:0.9rem;outline:none;">
         </div>
         <div style="padding:0.5rem 1rem;overflow-x:auto;white-space:nowrap;display:flex;gap:0.5rem;border-bottom:1px solid #222;" id="catFilters">
-            <button class="cat-btn active" onclick="filterPlats('all')">Tous</button>
+            <button class="cat-btn active" onclick="filterPlats('all',this)">Tous</button>
         </div>
         <div class="plat-list">
             <div class="plat-grid" id="platGrid"></div>
         </div>
     </div>
 
-    <!-- LOADING -->
-    <div class="loading-overlay" id="loading">
-        <div class="loader"></div>
-        <div class="loading-text">Chargement du rendu 3D...</div>
-    </div>
-
     <script>
+        /*
+         * ==============================================
+         *  MODÈLES 3D — CHEMINS VERS LES FICHIERS GLB
+         * ==============================================
+         * Pour chaque plat, renseigne le chemin vers le
+         * fichier .glb scanné avec Scaniverse.
+         *
+         * Si le fichier n'existe pas, le viewer affichera
+         * un message indiquant quel fichier manque.
+         *
+         * Pour ajouter un scan :
+         * 1. Scanne ton plat avec Scaniverse (gratuit)
+         * 2. Exporte en GLB
+         * 3. Place le fichier dans le dossier "models/"
+         * 4. Mets à jour le chemin ci-dessous
+         * ==============================================
+         */
+        const GLB_MODELS = {
+            // Entrées
+            1:  'models/bruschetta.glb',
+            2:  'models/soupe-oignon.glb',
+            3:  'models/escargots.glb',
+            4:  'models/tartare-saumon.glb',
+            5:  'models/foie-gras.glb',
+            6:  'models/carpaccio-boeuf.glb',
+            7:  'models/gaspacho.glb',
+            8:  'models/veloute-potiron.glb',
+            9:  'models/risotto-cepes.glb',
+            10: 'models/tartare-avocat.glb',
+            // Plats
+            11: 'models/burger-maison.glb',
+            12: 'models/pizza-truffe.glb',
+            13: 'models/filet-boeuf.glb',
+            14: 'models/crevettes-grillees.glb',
+            15: 'models/poulet-roti.glb',
+            16: 'models/saucisse-toulouse.glb',
+            17: 'models/magret-canard.glb',
+            18: 'models/risotto-fruits-mer.glb',
+            19: 'models/rack-agneau.glb',
+            20: 'models/pave-bar.glb',
+            21: 'models/duo-filets.glb',
+            22: 'models/couscous-royal.glb',
+            23: 'models/paella.glb',
+            24: 'models/steak-tartare.glb',
+            25: 'models/sushi-plateau.glb',
+            26: 'models/chili-con-carne.glb',
+            27: 'models/fish-chips.glb',
+            28: 'models/roti-porc.glb',
+            29: 'models/pad-thai.glb',
+            30: 'models/gratin-dauphinois.glb',
+            // Pizzas
+            31: 'models/pizza-margherita.glb',
+            32: 'models/pizza-pepperoni.glb',
+            33: 'models/pizza-quattro-formaggi.glb',
+            34: 'models/pizza-vegetarienne.glb',
+            35: 'models/pizza-reine.glb',
+            // Pâtes
+            36: 'models/spaghetti-bolognaise.glb',
+            37: 'models/pates-carbonara.glb',
+            38: 'models/ravioli-epinards.glb',
+            39: 'models/penne-arrabbiata.glb',
+            40: 'models/lasagnes.glb',
+            // Salades
+            41: 'models/salade-caesar.glb',
+            42: 'models/salade-nicoise.glb',
+            43: 'models/salade-chevre-chaud.glb',
+            44: 'models/salade-asiatique.glb',
+            45: 'models/taboule-libanais.glb',
+            // Sandwichs
+            46: 'models/club-sandwich.glb',
+            47: 'models/panini.glb',
+            48: 'models/tacos.glb',
+            49: 'models/kebab.glb',
+            50: 'models/banh-mi.glb',
+            // Poissons
+            51: 'models/saumon-grille.glb',
+            52: 'models/sole-meuniere.glb',
+            53: 'models/ceviche.glb',
+            54: 'models/thon-teriyaki.glb',
+            55: 'models/bouillabaisse.glb',
+            // Végétarien
+            56: 'models/buddha-bowl.glb',
+            57: 'models/curry-legumes.glb',
+            58: 'models/omelette-champignons.glb',
+            59: 'models/risotto-champignons.glb',
+            60: 'models/flammekueche.glb',
+            // Desserts
+            61: 'models/tiramisu.glb',
+            62: 'models/glace-artisanale.glb',
+            63: 'models/creme-brulee.glb',
+            64: 'models/fondant-chocolat.glb',
+            65: 'models/tarte-tatin.glb',
+            66: 'models/mousse-chocolat.glb',
+            67: 'models/profiteroles.glb',
+            68: 'models/crepes-suzette.glb',
+            69: 'models/panna-cotta.glb',
+            70: 'models/ile-flottante.glb',
+            71: 'models/berlingots.glb',
+            72: 'models/macarons.glb',
+            73: 'models/fruit-passion.glb',
+            74: 'models/spherifications.glb',
+            75: 'models/torched-meringue.glb',
+            // Boissons
+            76: 'models/mojito.glb',
+            77: 'models/smoothie-tropical.glb',
+            78: 'models/limonade.glb',
+            79: 'models/espresso.glb',
+            80: 'models/the-vert.glb',
+            81: 'models/jus-orange.glb',
+            82: 'models/milkshake-oreo.glb',
+            83: 'models/chai-latte.glb',
+            84: 'models/soda-artisanal.glb',
+            85: 'models/biere-craft.glb',
+            86: 'models/vin-rouge.glb',
+            87: 'models/champagne.glb',
+            88: 'models/aperol-spritz.glb',
+            // Accompagnements
+            89: 'models/frites-maison.glb',
+            90: 'models/legumes-grilles.glb',
+            91: 'models/riz-basmati.glb',
+            92: 'models/pdt-vapeur.glb',
+            93: 'models/puree-pdt.glb',
+            // Sauces
+            94: 'models/sauce-poivre.glb',
+            95: 'models/sauce-bearnaise.glb',
+            96: 'models/sauce-tomate.glb',
+            97: 'models/sauce-champignons.glb',
+            98: 'models/guacamole.glb',
+            // International
+            99:  'models/tacos-mexicain.glb',
+            100: 'models/ramen.glb',
+            101: 'models/tikka-masala.glb',
+            102: 'models/falafels.glb',
+            103: 'models/shawarma.glb',
+            104: 'models/pho.glb',
+            105: 'models/bibimbap.glb',
+            106: 'models/couscous-royal-intl.glb',
+            107: 'models/burger-gourmet.glb',
+            108: 'models/fish-tacos.glb',
+        };
+
         const plats = [
-            // ENTRÉES
-            { id: 1, name: 'Bruschetta', price: '8,50 €', desc: 'Tomates fraîches, basilic, huile d\'olive', emoji: '🍞', color: 0xCC6633, shape: 'box', category: 'Entrées' },
-            { id: 2, name: 'Soupe à l\'oignon', price: '9,00 €', desc: 'Oignons caramélisés, gruyère fondant', emoji: '🍲', color: 0x8B6914, shape: 'cylinder', category: 'Entrées' },
-            { id: 3, name: 'Escargots de Bourgogne', price: '14,00 €', desc: '6 pièces, beurre à l\'ail, persil', emoji: '🐌', color: 0x556B2F, shape: 'cylinder', category: 'Entrées' },
-            { id: 4, name: 'Tartare de saumon', price: '16,00 €', desc: 'Saumon frais, avocat, citron vert', emoji: '🐟', color: 0xFA8072, shape: 'cylinder', category: 'Entrées' },
-            { id: 5, name: 'Foie gras maison', price: '18,00 €', desc: 'Foie gras mi-cuit, brioche toastée', emoji: '🍞', color: 0xDAA520, shape: 'box', category: 'Entrées' },
-            { id: 6, name: 'Carpaccio de bœuf', price: '15,00 €', desc: 'Tranches fines, roquette, parmesan', emoji: '🥩', color: 0xDC143C, shape: 'cylinder', category: 'Entrées' },
-            { id: 7, name: 'Gaspacho andalou', price: '8,00 €', desc: 'Tomates, concombre, poivron, huile d\'olive', emoji: '🍅', color: 0xFF4500, shape: 'cylinder', category: 'Entrées' },
-            { id: 8, name: 'Velouté de potiron', price: '9,50 €', desc: 'Potiron rôti, crème d\'épinards, noisettes', emoji: '🎃', color: 0xFF8C00, shape: 'cylinder', category: 'Entrées' },
-            { id: 9, name: 'Risotto aux cèpes', price: '13,00 €', desc: 'Riz arborio, cèpes frais, parmesan', emoji: '🍚', color: 0xF5DEB3, shape: 'cylinder', category: 'Entrées' },
-            { id: 10, name: 'Tartare d\'avocat', price: '11,00 €', desc: 'Avocat frais, crevettes, mangue', emoji: '🥑', color: 0x228B22, shape: 'cylinder', category: 'Entrées' },
-
-            // PLATS CHAUDS
-            { id: 11, name: 'Burger Maison', price: '14,90 €', desc: 'Steak Angus, cheddar affiné, légumes frais', emoji: '🍔', color: 0xD2691E, shape: 'cylinder', category: 'Plats' },
-            { id: 12, name: 'Pizza Truffe', price: '18,50 €', desc: 'Mozzarella di bufala, crème de truffe', emoji: '🍕', color: 0xCC7722, shape: 'cylinder', category: 'Plats' },
-            { id: 13, name: 'Filet de Bœuf', price: '28,00 €', desc: 'Filet mignon, sauce au poivre, légumes grillés', emoji: '🥩', color: 0x8B0000, shape: 'box', category: 'Plats' },
-            { id: 14, name: 'Crevettes Grillées', price: '22,00 €', desc: 'Crevettes royales, beurre d\'ail, citron', emoji: '🍤', color: 0xFF6347, shape: 'cylinder', category: 'Plats' },
-            { id: 15, name: 'Poulet rôti', price: '16,50 €', desc: 'Poulet fermier, herbes de Provence, pommes de terre', emoji: '🍗', color: 0xDAA520, shape: 'cylinder', category: 'Plats' },
-            { id: 16, name: 'Saucisse de Toulouse', price: '15,00 €', desc: 'Saucisse artisanale, lentilles, moutarde', emoji: '🌭', color: 0x8B4513, shape: 'cylinder', category: 'Plats' },
-            { id: 17, name: 'Magret de canard', price: '24,00 €', desc: 'Canard laqué, sauce bigarade, haricots verts', emoji: '🦆', color: 0x800000, shape: 'box', category: 'Plats' },
-            { id: 18, name: 'Risotto aux fruits de mer', price: '22,50 €', desc: 'Crevettes, moules, encornets, safran', emoji: '🦐', color: 0xFF7F50, shape: 'cylinder', category: 'Plats' },
-            { id: 19, name: 'Rack d\'agneau', price: '32,00 €', desc: 'Agneau de Lozère, crustade d\'amande, légumes', emoji: '🍖', color: 0xA0522D, shape: 'box', category: 'Plats' },
-            { id: 20, name: 'Pavé de bar', price: '26,00 €', desc: 'Bar de ligne, beurre blanc, fenouil', emoji: '🐟', color: 0xFFD700, shape: 'box', category: 'Plats' },
-            { id: 21, name: 'Duo de filets', price: '34,00 €', desc: 'Filet de bœuf et filet de sandre, sauce truffe', emoji: '🥩', color: 0xB22222, shape: 'box', category: 'Plats' },
-            { id: 22, name: 'Couscous royal', price: '18,00 €', desc: 'Agneau, merguez, poulet, légumes, semoule', emoji: '🍲', color: 0xDAA520, shape: 'cylinder', category: 'Plats' },
-            { id: 23, name: 'Paella valenciana', price: '24,00 €', desc: 'Crevettes, palourdes, safran, pois', emoji: '🥘', color: 0xFFD700, shape: 'cylinder', category: 'Plats' },
-            { id: 24, name: 'Steak tartare', price: '19,00 €', desc: 'Bœuf haché cru, jaune d\'œuf, cornichons', emoji: '🥩', color: 0xDC143C, shape: 'cylinder', category: 'Plats' },
-            { id: 25, name: 'Sushi Plateau', price: '24,50 €', desc: '12 pièces, sashimi, edamame', emoji: '🍣', color: 0xFF4500, shape: 'box', category: 'Plats' },
-            { id: 26, name: 'Chili con carne', price: '16,00 €', desc: 'Bœuf haché, haricots rouges, piment, riz', emoji: '🌶️', color: 0x8B0000, shape: 'cylinder', category: 'Plats' },
-            { id: 27, name: 'Fish and chips', price: '17,50 €', desc: 'Cabillaud pané, frites maison, petits pois', emoji: '🐟', color: 0xDAA520, shape: 'box', category: 'Plats' },
-            { id: 28, name: 'Rôti de porc', price: '18,00 €', desc: 'Porc fermier, sauce pomme, patates douces', emoji: '🥩', color: 0xCD853F, shape: 'box', category: 'Plats' },
-            { id: 29, name: 'Pad thaï', price: '16,50 €', desc: 'Nouilles de riz, crevettes, cacahuètes, citron vert', emoji: '🍜', color: 0xDAA520, shape: 'cylinder', category: 'Plats' },
-            { id: 30, name: 'Gratin dauphinois', price: '14,00 €', desc: 'Pommes de terre, crème fraîche, gruyère', emoji: '🧀', color: 0xFFD700, shape: 'box', category: 'Plats' },
-
-            // PIZZAS
-            { id: 31, name: 'Pizza Margherita', price: '13,50 €', desc: 'Tomate, mozzarella, basilic frais', emoji: '🍕', color: 0xFF6347, shape: 'cylinder', category: 'Pizzas' },
-            { id: 32, name: 'Pizza Pepperoni', price: '15,00 €', desc: 'Pepperoni, mozzarella, sauce tomate', emoji: '🍕', color: 0xCC3333, shape: 'cylinder', category: 'Pizzas' },
-            { id: 33, name: 'Pizza Quattro Formaggi', price: '16,00 €', desc: 'Mozzarella, gorgonzola, parmesan, chèvre', emoji: '🍕', color: 0xFFD700, shape: 'cylinder', category: 'Pizzas' },
-            { id: 34, name: 'Pizza Végétarienne', price: '14,50 €', desc: 'Poivrons, champignons, olives, courgettes', emoji: '🍕', color: 0x228B22, shape: 'cylinder', category: 'Pizzas' },
-            { id: 35, name: 'Pizza Reine', price: '15,50 €', desc: 'Jambon, champignons, olives, mozzarella', emoji: '🍕', color: 0xD2691E, shape: 'cylinder', category: 'Pizzas' },
-
-            // PÂTES
-            { id: 36, name: 'Spaghetti Bolognaise', price: '14,00 €', desc: 'Bœuf haché, tomates fraîches, parmesan', emoji: '🍝', color: 0xCC3333, shape: 'cylinder', category: 'Pâtes' },
-            { id: 37, name: 'Pâtes Carbonara', price: '15,00 €', desc: 'Lardons, crème, parmesan, œuf', emoji: '🍝', color: 0xFFD700, shape: 'cylinder', category: 'Pâtes' },
-            { id: 38, name: 'Ravioli épinards', price: '16,50 €', desc: 'Ravioli maison, sauce tomate, ricotta', emoji: '🍝', color: 0x228B22, shape: 'cylinder', category: 'Pâtes' },
-            { id: 39, name: 'Penne arrabbiata', price: '13,50 €', desc: 'Tomates épicées, ail, persil, piment', emoji: '🍝', color: 0xFF4500, shape: 'cylinder', category: 'Pâtes' },
-            { id: 40, name: 'Lasagnes', price: '16,00 €', desc: 'Bœuf, béchamel, mozzarella, parmesan', emoji: '🍝', color: 0xD2691E, shape: 'box', category: 'Pâtes' },
-
-            // SALADES
-            { id: 41, name: 'Salade Caesar', price: '12,50 €', desc: 'Poulet grillé, parmesan, croûtons', emoji: '🥗', color: 0x228B22, shape: 'cylinder', category: 'Salades' },
-            { id: 42, name: 'Salade niçoise', price: '13,00 €', desc: 'Thon, œuf, olives, tomates, haricots verts', emoji: '🥗', color: 0x006400, shape: 'cylinder', category: 'Salades' },
-            { id: 43, name: 'Salade de chèvre chaud', price: '14,00 €', desc: 'Chèvre chaud, noix, betterave, mesclun', emoji: '🥗', color: 0x8FBC8F, shape: 'cylinder', category: 'Salades' },
-            { id: 44, name: 'Salade asiatique', price: '13,50 €', desc: 'Poulet, nouilles, cacahuètes, sauce sésame', emoji: '🥗', color: 0x9ACD32, shape: 'cylinder', category: 'Salades' },
-            { id: 45, name: 'Taboulé libanais', price: '10,00 €', desc: 'Boulgour, tomates, concombre, menthe', emoji: '🥗', color: 0x3CB371, shape: 'cylinder', category: 'Salades' },
-
-            // SANDWICHS
-            { id: 46, name: 'Club Sandwich', price: '13,50 €', desc: 'Poulet, bacon, laitue, tomate, mayo', emoji: '🥪', color: 0xD2691E, shape: 'box', category: 'Sandwichs' },
-            { id: 47, name: 'Panini jambon-fromage', price: '10,50 €', desc: 'Jambon, mozzarella, tomates séchées, pesto', emoji: '🥪', color: 0xDAA520, shape: 'box', category: 'Sandwichs' },
-            { id: 48, name: 'Tacos', price: '12,00 €', desc: 'Bœuf, guacamole, salsa, crème, cheddar', emoji: '🌮', color: 0xFFD700, shape: 'cylinder', category: 'Sandwichs' },
-            { id: 49, name: 'Kebab', price: '11,50 €', desc: 'Viande de bœuf, salad, tomates, sauce blanche', emoji: '🌯', color: 0xCD853F, shape: 'cylinder', category: 'Sandwichs' },
-            { id: 50, name: 'Banh Mi', price: '12,50 €', desc: 'Porc mariné, coriandre, piment, légumes', emoji: '🥖', color: 0xDAA520, shape: 'box', category: 'Sandwichs' },
-
-            // POISSONS
-            { id: 51, name: 'Saumon grillé', price: '22,00 €', desc: 'Saumon d\'Écosse, beurre citron, asperges', emoji: '🐟', color: 0xFA8072, shape: 'box', category: 'Poissons' },
-            { id: 52, name: 'Sole meunière', price: '26,00 €', desc: 'Sole de ligne, beurre noisette, citron', emoji: '🐟', color: 0xF0E68C, shape: 'box', category: 'Poissons' },
-            { id: 53, name: 'Ceviche de poissons', price: '18,00 €', desc: 'Poissons blancs, citron vert, coriandre, oignon', emoji: '🐟', color: 0x00CED1, shape: 'cylinder', category: 'Poissons' },
-            { id: 54, name: 'Thon teriyaki', price: '24,00 €', desc: 'Thon rouge, sauce teriyaki, riz japonais', emoji: '🐟', color: 0x8B0000, shape: 'box', category: 'Poissons' },
-            { id: 55, name: 'Bouillabaisse', price: '28,00 €', desc: 'Rascasse, crevettes, moules, safran, ailloli', emoji: '🥘', color: 0xFF6347, shape: 'cylinder', category: 'Poissons' },
-
-            // VÉGÉTARIEN
-            { id: 56, name: 'Buddha Bowl', price: '14,50 €', desc: 'Quinoa, avocat, patate douce, edamame', emoji: '🥗', color: 0x228B22, shape: 'cylinder', category: 'Végétarien' },
-            { id: 57, name: 'Curry de légumes', price: '15,00 €', desc: 'Légumes de saison, lait de coco, riz basmati', emoji: '🍛', color: 0xFFD700, shape: 'cylinder', category: 'Végétarien' },
-            { id: 58, name: 'Omelette aux champignons', price: '12,00 €', desc: 'Œufs fermiers, champignons de Paris, gruyère', emoji: '🍳', color: 0xFFD700, shape: 'cylinder', category: 'Végétarien' },
-            { id: 59, name: 'Risotto champignons', price: '16,00 €', desc: 'Riz arborio, cèpes, girolles, parmesan', emoji: '🍄', color: 0xD2B48C, shape: 'cylinder', category: 'Végétarien' },
-            { id: 60, name: 'Flammekueche', price: '14,00 €', desc: 'Crème fraîche, oignons, lardons, noix de muscade', emoji: '🍕', color: 0xF5DEB3, shape: 'cylinder', category: 'Végétarien' },
-
-            // DESSERTS
-            { id: 61, name: 'Tiramisu', price: '9,50 €', desc: 'Mascarpone, café expresso, cacao', emoji: '🍰', color: 0xDEB887, shape: 'box', category: 'Desserts' },
-            { id: 62, name: 'Glace Artisanale', price: '7,50 €', desc: '3 boules, coulis chocolat, fraises', emoji: '🍨', color: 0xFFB6C1, shape: 'cone', category: 'Desserts' },
-            { id: 63, name: 'Crème brûlée', price: '10,00 €', desc: 'Crème vanille, caramel croustillant', emoji: '🍮', color: 0xFFD700, shape: 'cylinder', category: 'Desserts' },
-            { id: 64, name: 'Fondant au chocolat', price: '11,00 €', desc: 'Chocolat Valrhona, cœur coulant, glace vanille', emoji: '🍫', color: 0x3C1414, shape: 'cylinder', category: 'Desserts' },
-            { id: 65, name: 'Tarte tatin', price: '10,50 €', desc: 'Pommes caramélisées, pâte feuilletée, crème', emoji: '🥧', color: 0xD2691E, shape: 'cylinder', category: 'Desserts' },
-            { id: 66, name: 'Mousse au chocolat', price: '8,50 €', desc: 'Chocolat noir 70%, crème fouettée', emoji: '🍫', color: 0x3C1414, shape: 'cylinder', category: 'Desserts' },
-            { id: 67, name: 'Profiteroles', price: '12,00 €', desc: 'Choux, glace vanille, sauce chocolat', emoji: '🍩', color: 0xD2691E, shape: 'cylinder', category: 'Desserts' },
-            { id: 68, name: 'Crêpes Suzette', price: '11,50 €', desc: 'Crêpes, beurre d\'orange, Grand Marnier', emoji: '🥞', color: 0xFFD700, shape: 'cylinder', category: 'Desserts' },
-            { id: 69, name: 'Panna cotta', price: '9,00 €', desc: 'Crème cuite, coulis de fruits rouges, menthe', emoji: '🍮', color: 0xFFF8DC, shape: 'cylinder', category: 'Desserts' },
-            { id: 70, name: 'Île flottante', price: '10,00 €', desc: 'Meringue, crème anglaise, caramel', emoji: '🍮', color: 0xFFFACD, shape: 'cylinder', category: 'Desserts' },
-            { id: 71, name: 'Berlingots', price: '8,00 €', desc: 'Beignets de Carnaval, sucre glace', emoji: '🍩', color: 0xDAA520, shape: 'cylinder', category: 'Desserts' },
-            { id: 72, name: 'Macarons', price: '12,00 €', desc: 'Assortiment de 6 macarons maison', emoji: '🍪', color: 0xFFB6C1, shape: 'cylinder', category: 'Desserts' },
-            { id: 73, name: 'Fruit de la passion', price: '9,50 €', desc: 'Mousse fruit de la passion, coulis mangue', emoji: '🥭', color: 0xFF8C00, shape: 'cylinder', category: 'Desserts' },
-            { id: 74, name: 'Sphérifications', price: '14,00 €', desc: 'Perles de fruits, texture surprise, menthe', emoji: '🫧', color: 0x00CED1, shape: 'cylinder', category: 'Desserts' },
-            { id: 75, name: 'Torched Meringue', price: '11,00 €', desc: 'Meringue flambée, citron, basilic', emoji: '🍮', color: 0xFFF8DC, shape: 'cylinder', category: 'Desserts' },
-
-            // BOISSONS
-            { id: 76, name: 'Cocktail Mojito', price: '10,00 €', desc: 'Rhum blanc, menthe, citron vert, eau gazeuse', emoji: '🍹', color: 0x00FF7F, shape: 'cylinder', category: 'Boissons' },
-            { id: 77, name: 'Smoothie tropical', price: '8,50 €', desc: 'Mangue, passion, ananas, yaourt', emoji: '🥤', color: 0xFFD700, shape: 'cylinder', category: 'Boissons' },
-            { id: 78, name: 'Limonade maison', price: '6,00 €', desc: 'Citrons frais, menthe, sirop d\'agave', emoji: '🍋', color: 0xFFF44F, shape: 'cylinder', category: 'Boissons' },
-            { id: 79, name: 'Espresso', price: '3,50 €', desc: 'Café torréfié artisanal, intense et corsé', emoji: '☕', color: 0x3C1414, shape: 'cylinder', category: 'Boissons' },
-            { id: 80, name: 'Thé vert sencha', price: '5,00 €', desc: 'Thé vert japonais, notes végétales et fraîches', emoji: '🍵', color: 0x90EE90, shape: 'cylinder', category: 'Boissons' },
-            { id: 81, name: 'Jus pressé orange', price: '6,50 €', desc: 'Oranges fraîchement pressées, sans sucre ajouté', emoji: '🍊', color: 0xFF8C00, shape: 'cylinder', category: 'Boissons' },
-            { id: 82, name: 'Milkshake Oreo', price: '9,00 €', desc: 'Glace vanille, Oreo émiettés, crème fouettée', emoji: '🥛', color: 0x2F2F2F, shape: 'cylinder', category: 'Boissons' },
-            { id: 83, name: 'Chai latte', price: '6,00 €', desc: 'Thé épicé, lait chaud, cannelle, miel', emoji: '☕', color: 0xD2691E, shape: 'cylinder', category: 'Boissons' },
-            { id: 84, name: 'Soda artisana', price: '5,50 €', desc: 'Sureau, gingembre, citron, eau gazeuse', emoji: '🧃', color: 0x800080, shape: 'cylinder', category: 'Boissons' },
-            { id: 85, name: 'Bière craft IPA', price: '8,00 €', desc: 'Bière artisanale, notes d\'agrumes et de pin', emoji: '🍺', color: 0xDAA520, shape: 'cylinder', category: 'Boissons' },
-            { id: 86, name: 'Vin rouge Bordeaux', price: '12,00 €', desc: 'Cuvée prestige, tanins soyeux, fruits noirs', emoji: '🍷', color: 0x722F37, shape: 'cylinder', category: 'Boissons' },
-            { id: 87, name: 'Champagne brut', price: '15,00 €', desc: 'Prestige, bulles fines, notes de brioche', emoji: '🥂', color: 0xFFD700, shape: 'cylinder', category: 'Boissons' },
-            { id: 88, name: 'Aperol Spritz', price: '9,50 €', desc: 'Aperol, prosecco, eau gazeuse, orange', emoji: '🍹', color: 0xFF6600, shape: 'cylinder', category: 'Boissons' },
-
-            // ACCOMPAGNEMENTS
-            { id: 89, name: 'Frites maison', price: '5,50 €', desc: 'Pommes de terre, huile d\'arachide, sel fin', emoji: '🍟', color: 0xDAA520, shape: 'cylinder', category: 'Accompagnements' },
-            { id: 90, name: 'Légumes grillés', price: '6,00 €', desc: 'Courgettes, poivrons, aubergines, huile d\'olive', emoji: '🥦', color: 0x228B22, shape: 'cylinder', category: 'Accompagnements' },
-            { id: 91, name: 'Riz basmati', price: '4,00 €', desc: 'Riz parfumé, graines de cumin', emoji: '🍚', color: 0xFFFACD, shape: 'cylinder', category: 'Accompagnements' },
-            { id: 92, name: 'Pommes de terre vapeur', price: '5,00 €', desc: 'Pommes de terre fondantes, beurre persillé', emoji: '🥔', color: 0xF0E68C, shape: 'cylinder', category: 'Accompagnements' },
-            { id: 93, name: 'Purée de pommes de terre', price: '5,50 €', desc: 'Pommes de terre, beurre, lait, noix de muscade', emoji: '🥔', color: 0xFFFACD, shape: 'cylinder', category: 'Accompagnements' },
-
-            // SAUCES
-            { id: 94, name: 'Sauce au poivre', price: '3,50 €', desc: 'Crème, cognac, baies de poivre', emoji: '🫕', color: 0xD2691E, shape: 'cylinder', category: 'Sauces' },
-            { id: 95, name: 'Sauce béarnaise', price: '3,50 €', desc: 'Beurre, tarragon, échalote, vinaigre', emoji: '🫕', color: 0xFFD700, shape: 'cylinder', category: 'Sauces' },
-            { id: 96, name: 'Sauce tomate fraîche', price: '3,00 €', desc: 'Tomates, basilic, ail, huile d\'olive', emoji: '🍅', color: 0xFF4500, shape: 'cylinder', category: 'Sauces' },
-            { id: 97, name: 'Sauce champignons', price: '4,00 €', desc: 'Champignons frais, crème, ciboulette', emoji: '🍄', color: 0xD2B48C, shape: 'cylinder', category: 'Sauces' },
-            { id: 98, name: 'Guacamole', price: '4,50 €', desc: 'Avocat frais, citron vert, coriandre, piment', emoji: '🥑', color: 0x228B22, shape: 'cylinder', category: 'Sauces' },
-
-            // PLATS DU MONDE
-            { id: 99, name: 'Tacos mexicain', price: '14,00 €', desc: 'Bœuf, guacamole, salsa, crème, cheddar', emoji: '🌮', color: 0xFFD700, shape: 'cylinder', category: 'International' },
-            { id: 100, name: 'Ramen japonais', price: '16,00 €', desc: 'Bouillon tonkotsu, noodles, porc, œuf mollet', emoji: '🍜', color: 0xDAA520, shape: 'cylinder', category: 'International' },
-            { id: 101, name: 'Tikka Masala', price: '17,00 €', desc: 'Poulet mariné, sauce tomate épicée, riz basmati', emoji: '🍛', color: 0xFF6600, shape: 'cylinder', category: 'International' },
-            { id: 102, name: 'Falafels', price: '13,00 €', desc: 'Beignets de pois chiches, houmous, taboulé', emoji: '🧆', color: 0xDAA520, shape: 'cylinder', category: 'International' },
-            { id: 103, name: 'Shawarma', price: '14,50 €', desc: 'Viande émincée, légumes grillés, sauce tahini', emoji: '🌯', color: 0xCD853F, shape: 'cylinder', category: 'International' },
-            { id: 104, name: 'Pho vietnamien', price: '15,50 €', desc: 'Bouillon bœuf, nouilles de riz, herbes fraîches', emoji: '🍜', color: 0xF5DEB3, shape: 'cylinder', category: 'International' },
-            { id: 105, name: 'Bibimbap coréen', price: '16,50 €', desc: 'Riz, légumes, œuf, viande, sauce gochujang', emoji: '🍚', color: 0xFF4500, shape: 'cylinder', category: 'International' },
-            { id: 106, name: 'Couscous royal', price: '18,00 €', desc: 'Agneau, merguez, poulet, légumes, semoule', emoji: '🍲', color: 0xDAA520, shape: 'cylinder', category: 'International' },
-            { id: 107, name: 'Burger gourmet', price: '19,00 €', desc: 'Wagyu, truffe, cheddar affiné, brioche maison', emoji: '🍔', color: 0x8B0000, shape: 'cylinder', category: 'International' },
-            { id: 108, name: 'Fish tacos', price: '15,00 €', desc: 'Poisson pané, chou, lime, sauce chipotle', emoji: '🌮', color: 0xFFD700, shape: 'cylinder', category: 'International' },
+            { id: 1, name: 'Bruschetta', price: '8,50 €', desc: 'Tomates fraîches, basilic, huile d\'olive', emoji: '🍞', category: 'Entrées' },
+            { id: 2, name: 'Soupe à l\'oignon', price: '9,00 €', desc: 'Oignons caramélisés, gruyère fondant', emoji: '🍲', category: 'Entrées' },
+            { id: 3, name: 'Escargots de Bourgogne', price: '14,00 €', desc: '6 pièces, beurre à l\'ail, persil', emoji: '🐌', category: 'Entrées' },
+            { id: 4, name: 'Tartare de saumon', price: '16,00 €', desc: 'Saumon frais, avocat, citron vert', emoji: '🐟', category: 'Entrées' },
+            { id: 5, name: 'Foie gras maison', price: '18,00 €', desc: 'Foie gras mi-cuit, brioche toastée', emoji: '🍞', category: 'Entrées' },
+            { id: 6, name: 'Carpaccio de bœuf', price: '15,00 €', desc: 'Tranches fines, roquette, parmesan', emoji: '🥩', category: 'Entrées' },
+            { id: 7, name: 'Gaspacho andalou', price: '8,00 €', desc: 'Tomates, concombre, poivron, huile d\'olive', emoji: '🍅', category: 'Entrées' },
+            { id: 8, name: 'Velouté de potiron', price: '9,50 €', desc: 'Potiron rôti, crème d\'épinards, noisettes', emoji: '🎃', category: 'Entrées' },
+            { id: 9, name: 'Risotto aux cèpes', price: '13,00 €', desc: 'Riz arborio, cèpes frais, parmesan', emoji: '🍚', category: 'Entrées' },
+            { id: 10, name: 'Tartare d\'avocat', price: '11,00 €', desc: 'Avocat frais, crevettes, mangue', emoji: '🥑', category: 'Entrées' },
+            { id: 11, name: 'Burger Maison', price: '14,90 €', desc: 'Steak Angus, cheddar affiné, légumes frais', emoji: '🍔', category: 'Plats' },
+            { id: 12, name: 'Pizza Truffe', price: '18,50 €', desc: 'Mozzarella di bufala, crème de truffe', emoji: '🍕', category: 'Plats' },
+            { id: 13, name: 'Filet de Bœuf', price: '28,00 €', desc: 'Filet mignon, sauce au poivre, légumes grillés', emoji: '🥩', category: 'Plats' },
+            { id: 14, name: 'Crevettes Grillées', price: '22,00 €', desc: 'Crevettes royales, beurre d\'ail, citron', emoji: '🍤', category: 'Plats' },
+            { id: 15, name: 'Poulet rôti', price: '16,50 €', desc: 'Poulet fermier, herbes de Provence', emoji: '🍗', category: 'Plats' },
+            { id: 16, name: 'Saucisse de Toulouse', price: '15,00 €', desc: 'Saucisse artisanale, lentilles, moutarde', emoji: '🌭', category: 'Plats' },
+            { id: 17, name: 'Magret de canard', price: '24,00 €', desc: 'Canard laqué, sauce bigarade, haricots verts', emoji: '🦆', category: 'Plats' },
+            { id: 18, name: 'Risotto aux fruits de mer', price: '22,50 €', desc: 'Crevettes, moules, encornets, safran', emoji: '🦐', category: 'Plats' },
+            { id: 19, name: 'Rack d\'agneau', price: '32,00 €', desc: 'Agneau de Lozère, crustade d\'amande', emoji: '🍖', category: 'Plats' },
+            { id: 20, name: 'Pavé de bar', price: '26,00 €', desc: 'Bar de ligne, beurre blanc, fenouil', emoji: '🐟', category: 'Plats' },
+            { id: 21, name: 'Duo de filets', price: '34,00 €', desc: 'Filet de bœuf et sandre, sauce truffe', emoji: '🥩', category: 'Plats' },
+            { id: 22, name: 'Couscous royal', price: '18,00 €', desc: 'Agneau, merguez, poulet, légumes, semoule', emoji: '🍲', category: 'Plats' },
+            { id: 23, name: 'Paella valenciana', price: '24,00 €', desc: 'Crevettes, palourdes, safran, pois', emoji: '🥘', category: 'Plats' },
+            { id: 24, name: 'Steak tartare', price: '19,00 €', desc: 'Bœuf haché cru, jaune d\'œuf, cornichons', emoji: '🥩', category: 'Plats' },
+            { id: 25, name: 'Sushi Plateau', price: '24,50 €', desc: '12 pièces, sashimi, edamame', emoji: '🍣', category: 'Plats' },
+            { id: 26, name: 'Chili con carne', price: '16,00 €', desc: 'Bœuf haché, haricots rouges, piment, riz', emoji: '🌶️', category: 'Plats' },
+            { id: 27, name: 'Fish and chips', price: '17,50 €', desc: 'Cabillaud pané, frites maison', emoji: '🐟', category: 'Plats' },
+            { id: 28, name: 'Rôti de porc', price: '18,00 €', desc: 'Porc fermier, sauce pomme, patates douces', emoji: '🥩', category: 'Plats' },
+            { id: 29, name: 'Pad thaï', price: '16,50 €', desc: 'Nouilles de riz, crevettes, cacahuètes', emoji: '🍜', category: 'Plats' },
+            { id: 30, name: 'Gratin dauphinois', price: '14,00 €', desc: 'Pommes de terre, crème fraîche, gruyère', emoji: '🧀', category: 'Plats' },
+            { id: 31, name: 'Pizza Margherita', price: '13,50 €', desc: 'Tomate, mozzarella, basilic frais', emoji: '🍕', category: 'Pizzas' },
+            { id: 32, name: 'Pizza Pepperoni', price: '15,00 €', desc: 'Pepperoni, mozzarella, sauce tomate', emoji: '🍕', category: 'Pizzas' },
+            { id: 33, name: 'Pizza Quattro Formaggi', price: '16,00 €', desc: 'Mozzarella, gorgonzola, parmesan, chèvre', emoji: '🍕', category: 'Pizzas' },
+            { id: 34, name: 'Pizza Végétarienne', price: '14,50 €', desc: 'Poivrons, champignons, olives, courgettes', emoji: '🍕', category: 'Pizzas' },
+            { id: 35, name: 'Pizza Reine', price: '15,50 €', desc: 'Jambon, champignons, olives, mozzarella', emoji: '🍕', category: 'Pizzas' },
+            { id: 36, name: 'Spaghetti Bolognaise', price: '14,00 €', desc: 'Bœuf haché, tomates fraîches, parmesan', emoji: '🍝', category: 'Pâtes' },
+            { id: 37, name: 'Pâtes Carbonara', price: '15,00 €', desc: 'Lardons, crème, parmesan, œuf', emoji: '🍝', category: 'Pâtes' },
+            { id: 38, name: 'Ravioli épinards', price: '16,50 €', desc: 'Ravioli maison, sauce tomate, ricotta', emoji: '🍝', category: 'Pâtes' },
+            { id: 39, name: 'Penne arrabbiata', price: '13,50 €', desc: 'Tomates épicées, ail, persil, piment', emoji: '🍝', category: 'Pâtes' },
+            { id: 40, name: 'Lasagnes', price: '16,00 €', desc: 'Bœuf, béchamel, mozzarella, parmesan', emoji: '🍝', category: 'Pâtes' },
+            { id: 41, name: 'Salade Caesar', price: '12,50 €', desc: 'Poulet grillé, parmesan, croûtons', emoji: '🥗', category: 'Salades' },
+            { id: 42, name: 'Salade niçoise', price: '13,00 €', desc: 'Thon, œuf, olives, tomates, haricots verts', emoji: '🥗', category: 'Salades' },
+            { id: 43, name: 'Salade de chèvre chaud', price: '14,00 €', desc: 'Chèvre chaud, noix, betterave, mesclun', emoji: '🥗', category: 'Salades' },
+            { id: 44, name: 'Salade asiatique', price: '13,50 €', desc: 'Poulet, nouilles, cacahuètes, sauce sésame', emoji: '🥗', category: 'Salades' },
+            { id: 45, name: 'Taboulé libanais', price: '10,00 €', desc: 'Boulgour, tomates, concombre, menthe', emoji: '🥗', category: 'Salades' },
+            { id: 46, name: 'Club Sandwich', price: '13,50 €', desc: 'Poulet, bacon, laitue, tomate, mayo', emoji: '🥪', category: 'Sandwichs' },
+            { id: 47, name: 'Panini jambon-fromage', price: '10,50 €', desc: 'Jambon, mozzarella, tomates séchées, pesto', emoji: '🥪', category: 'Sandwichs' },
+            { id: 48, name: 'Tacos', price: '12,00 €', desc: 'Bœuf, guacamole, salsa, crème, cheddar', emoji: '🌮', category: 'Sandwichs' },
+            { id: 49, name: 'Kebab', price: '11,50 €', desc: 'Viande de bœuf, salad, tomates, sauce blanche', emoji: '🌯', category: 'Sandwichs' },
+            { id: 50, name: 'Banh Mi', price: '12,50 €', desc: 'Porc mariné, coriandre, piment, légumes', emoji: '🥖', category: 'Sandwichs' },
+            { id: 51, name: 'Saumon grillé', price: '22,00 €', desc: 'Saumon d\'Écosse, beurre citron, asperges', emoji: '🐟', category: 'Poissons' },
+            { id: 52, name: 'Sole meunière', price: '26,00 €', desc: 'Sole de ligne, beurre noisette, citron', emoji: '🐟', category: 'Poissons' },
+            { id: 53, name: 'Ceviche de poissons', price: '18,00 €', desc: 'Poissons blancs, citron vert, coriandre', emoji: '🐟', category: 'Poissons' },
+            { id: 54, name: 'Thon teriyaki', price: '24,00 €', desc: 'Thon rouge, sauce teriyaki, riz japonais', emoji: '🐟', category: 'Poissons' },
+            { id: 55, name: 'Bouillabaisse', price: '28,00 €', desc: 'Rascasse, crevettes, moules, safran', emoji: '🥘', category: 'Poissons' },
+            { id: 56, name: 'Buddha Bowl', price: '14,50 €', desc: 'Quinoa, avocat, patate douce, edamame', emoji: '🥗', category: 'Végétarien' },
+            { id: 57, name: 'Curry de légumes', price: '15,00 €', desc: 'Légumes de saison, lait de coco, riz basmati', emoji: '🍛', category: 'Végétarien' },
+            { id: 58, name: 'Omelette aux champignons', price: '12,00 €', desc: 'Œufs fermiers, champignons de Paris, gruyère', emoji: '🍳', category: 'Végétarien' },
+            { id: 59, name: 'Risotto champignons', price: '16,00 €', desc: 'Riz arborio, cèpes, girolles, parmesan', emoji: '🍄', category: 'Végétarien' },
+            { id: 60, name: 'Flammekueche', price: '14,00 €', desc: 'Crème fraîche, oignons, lardons', emoji: '🍕', category: 'Végétarien' },
+            { id: 61, name: 'Tiramisu', price: '9,50 €', desc: 'Mascarpone, café expresso, cacao', emoji: '🍰', category: 'Desserts' },
+            { id: 62, name: 'Glace Artisanale', price: '7,50 €', desc: '3 boules, coulis chocolat, fraises', emoji: '🍨', category: 'Desserts' },
+            { id: 63, name: 'Crème brûlée', price: '10,00 €', desc: 'Crème vanille, caramel croustillant', emoji: '🍮', category: 'Desserts' },
+            { id: 64, name: 'Fondant au chocolat', price: '11,00 €', desc: 'Chocolat Valrhona, cœur coulant', emoji: '🍫', category: 'Desserts' },
+            { id: 65, name: 'Tarte tatin', price: '10,50 €', desc: 'Pommes caramélisées, pâte feuilletée', emoji: '🥧', category: 'Desserts' },
+            { id: 66, name: 'Mousse au chocolat', price: '8,50 €', desc: 'Chocolat noir 70%, crème fouettée', emoji: '🍫', category: 'Desserts' },
+            { id: 67, name: 'Profiteroles', price: '12,00 €', desc: 'Choux, glace vanille, sauce chocolat', emoji: '🍩', category: 'Desserts' },
+            { id: 68, name: 'Crêpes Suzette', price: '11,50 €', desc: 'Crêpes, beurre d\'orange, Grand Marnier', emoji: '🥞', category: 'Desserts' },
+            { id: 69, name: 'Panna cotta', price: '9,00 €', desc: 'Crème cuite, coulis de fruits rouges', emoji: '🍮', category: 'Desserts' },
+            { id: 70, name: 'Île flottante', price: '10,00 €', desc: 'Meringue, crème anglaise, caramel', emoji: '🍮', category: 'Desserts' },
+            { id: 71, name: 'Berlingots', price: '8,00 €', desc: 'Beignets de Carnaval, sucre glace', emoji: '🍩', category: 'Desserts' },
+            { id: 72, name: 'Macarons', price: '12,00 €', desc: 'Assortiment de 6 macarons maison', emoji: '🍪', category: 'Desserts' },
+            { id: 73, name: 'Fruit de la passion', price: '9,50 €', desc: 'Mousse fruit de la passion, coulis mangue', emoji: '🥭', category: 'Desserts' },
+            { id: 74, name: 'Sphérifications', price: '14,00 €', desc: 'Perles de fruits, texture surprise', emoji: '🫧', category: 'Desserts' },
+            { id: 75, name: 'Torched Meringue', price: '11,00 €', desc: 'Meringue flambée, citron, basilic', emoji: '🍮', category: 'Desserts' },
+            { id: 76, name: 'Cocktail Mojito', price: '10,00 €', desc: 'Rhum blanc, menthe, citron vert', emoji: '🍹', category: 'Boissons' },
+            { id: 77, name: 'Smoothie tropical', price: '8,50 €', desc: 'Mangue, passion, ananas, yaourt', emoji: '🥤', category: 'Boissons' },
+            { id: 78, name: 'Limonade maison', price: '6,00 €', desc: 'Citrons frais, menthe, sirop d\'agave', emoji: '🍋', category: 'Boissons' },
+            { id: 79, name: 'Espresso', price: '3,50 €', desc: 'Café torréfié artisanal, intense et corsé', emoji: '☕', category: 'Boissons' },
+            { id: 80, name: 'Thé vert sencha', price: '5,00 €', desc: 'Thé vert japonais, notes végétales', emoji: '🍵', category: 'Boissons' },
+            { id: 81, name: 'Jus pressé orange', price: '6,50 €', desc: 'Oranges fraîchement pressées', emoji: '🍊', category: 'Boissons' },
+            { id: 82, name: 'Milkshake Oreo', price: '9,00 €', desc: 'Glace vanille, Oreo émiettés', emoji: '🥛', category: 'Boissons' },
+            { id: 83, name: 'Chai latte', price: '6,00 €', desc: 'Thé épicé, lait chaud, cannelle, miel', emoji: '☕', category: 'Boissons' },
+            { id: 84, name: 'Soda artisana', price: '5,50 €', desc: 'Sureau, gingembre, citron, eau gazeuse', emoji: '🧃', category: 'Boissons' },
+            { id: 85, name: 'Bière craft IPA', price: '8,00 €', desc: 'Bière artisanale, notes d\'agrumes', emoji: '🍺', category: 'Boissons' },
+            { id: 86, name: 'Vin rouge Bordeaux', price: '12,00 €', desc: 'Cuvée prestige, tanins soyeux', emoji: '🍷', category: 'Boissons' },
+            { id: 87, name: 'Champagne brut', price: '15,00 €', desc: 'Prestige, bulles fines, notes de brioche', emoji: '🥂', category: 'Boissons' },
+            { id: 88, name: 'Aperol Spritz', price: '9,50 €', desc: 'Aperol, prosecco, eau gazeuse, orange', emoji: '🍹', category: 'Boissons' },
+            { id: 89, name: 'Frites maison', price: '5,50 €', desc: 'Pommes de terre, huile d\'arachide', emoji: '🍟', category: 'Accompagnements' },
+            { id: 90, name: 'Légumes grillés', price: '6,00 €', desc: 'Courgettes, poivrons, aubergines', emoji: '🥦', category: 'Accompagnements' },
+            { id: 91, name: 'Riz basmati', price: '4,00 €', desc: 'Riz parfumé, graines de cumin', emoji: '🍚', category: 'Accompagnements' },
+            { id: 92, name: 'Pommes de terre vapeur', price: '5,00 €', desc: 'Pommes de terre fondantes, beurre persillé', emoji: '🥔', category: 'Accompagnements' },
+            { id: 93, name: 'Purée de pommes de terre', price: '5,50 €', desc: 'Pommes de terre, beurre, lait', emoji: '🥔', category: 'Accompagnements' },
+            { id: 94, name: 'Sauce au poivre', price: '3,50 €', desc: 'Crème, cognac, baies de poivre', emoji: '🫕', category: 'Sauces' },
+            { id: 95, name: 'Sauce béarnaise', price: '3,50 €', desc: 'Beurre, tarragon, échalote, vinaigre', emoji: '🫕', category: 'Sauces' },
+            { id: 96, name: 'Sauce tomate fraîche', price: '3,00 €', desc: 'Tomates, basilic, ail, huile d\'olive', emoji: '🍅', category: 'Sauces' },
+            { id: 97, name: 'Sauce champignons', price: '4,00 €', desc: 'Champignons frais, crème, ciboulette', emoji: '🍄', category: 'Sauces' },
+            { id: 98, name: 'Guacamole', price: '4,50 €', desc: 'Avocat frais, citron vert, coriandre', emoji: '🥑', category: 'Sauces' },
+            { id: 99, name: 'Tacos mexicain', price: '14,00 €', desc: 'Bœuf, guacamole, salsa, crème, cheddar', emoji: '🌮', category: 'International' },
+            { id: 100, name: 'Ramen japonais', price: '16,00 €', desc: 'Bouillon tonkotsu, noodles, porc, œuf mollet', emoji: '🍜', category: 'International' },
+            { id: 101, name: 'Tikka Masala', price: '17,00 €', desc: 'Poulet mariné, sauce tomate épicée', emoji: '🍛', category: 'International' },
+            { id: 102, name: 'Falafels', price: '13,00 €', desc: 'Beignets de pois chiches, houmous', emoji: '🧆', category: 'International' },
+            { id: 103, name: 'Shawarma', price: '14,50 €', desc: 'Viande émincée, légumes grillés, sauce tahini', emoji: '🌯', category: 'International' },
+            { id: 104, name: 'Pho vietnamien', price: '15,50 €', desc: 'Bouillon bœuf, nouilles de riz, herbes', emoji: '🍜', category: 'International' },
+            { id: 105, name: 'Bibimbap coréen', price: '16,50 €', desc: 'Riz, légumes, œuf, viande, gochujang', emoji: '🍚', category: 'International' },
+            { id: 106, name: 'Couscous royal', price: '18,00 €', desc: 'Agneau, merguez, poulet, légumes', emoji: '🍲', category: 'International' },
+            { id: 107, name: 'Burger gourmet', price: '19,00 €', desc: 'Wagyu, truffe, cheddar affiné, brioche maison', emoji: '🍔', category: 'International' },
+            { id: 108, name: 'Fish tacos', price: '15,00 €', desc: 'Poisson pané, chou, lime, sauce chipotle', emoji: '🌮', category: 'International' },
         ];
 
-        // Catégories pour filtre
         const categories = [...new Set(plats.map(p => p.category))];
+        let selectedPlat = plats[10];
+        let scanComplete = false;
+        let autoScanActive = false;
+        let autoScanInterval = null;
+        let currentModelViewer = null;
 
-        let scene, camera, renderer, currentMesh, autoRotate = true, isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
+        // ==================== CAMERA ====================
         let cameraStream = null;
         let facingMode = 'environment';
 
-        // CAMERA
         async function startCamera() {
             try {
-                const constraints = {
-                    video: {
-                        facingMode: facingMode,
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
-                };
-                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-                const video = document.getElementById('cameraFeed');
-                video.srcObject = cameraStream;
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                });
+                document.getElementById('cameraFeed').srcObject = cameraStream;
             } catch (err) {
-                console.log('Camera non disponible, mode demo');
+                console.log('Camera non disponible:', err);
             }
         }
 
@@ -742,733 +845,287 @@
                 const capabilities = track.getCapabilities ? track.getCapabilities() : {};
                 if (capabilities.torch) {
                     const settings = track.getSettings();
-                    await track.applyConstraints({
-                        advanced: [{ torch: !settings.torch }]
-                    });
+                    await track.applyConstraints({ advanced: [{ torch: !settings.torch }] });
                     btn.classList.toggle('active');
                 }
             }
         }
 
-        // PLAT LIST
-        function showPlatList() {
-            const grid = document.getElementById('platGrid');
-            renderPlats(grid, plats);
-            document.getElementById('platList').classList.add('active');
+        // ==================== SCAN ROTATION ====================
+        const circumference = 2 * Math.PI * 60;
+        const progressRing = document.getElementById('progressRing');
+        const degreeText = document.getElementById('degreeText');
+        const percentText = document.getElementById('percentText');
+        const scanBarFill = document.getElementById('scanBarFill');
+        const statAngle = document.getElementById('statAngle');
+        const statPoints = document.getElementById('statPoints');
+        const statStatus = document.getElementById('statStatus');
+        const instructionMain = document.getElementById('instructionMain');
+        const instructionSub = document.getElementById('instructionSub');
+        const dragHint = document.getElementById('dragHint');
+        const scannerFrame = document.getElementById('scannerFrame');
+
+        let targetAngle = 0;
+        let visitedAngles = new Set();
+        let isDragging = false;
+        let lastDragX = 0;
+
+        function setupDragTracking() {
+            const el = document.body;
+            const onStart = (x) => {
+                if (scanComplete) return;
+                isDragging = true;
+                lastDragX = x;
+                dragHint.style.opacity = '0.3';
+            };
+            const onMove = (x) => {
+                if (!isDragging || scanComplete) return;
+                const delta = x - lastDragX;
+                lastDragX = x;
+                targetAngle += delta * 0.5;
+                if (targetAngle < 0) targetAngle += 360;
+                if (targetAngle >= 360) targetAngle -= 360;
+            };
+            const onEnd = () => { isDragging = false; };
+
+            el.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.plat-list-overlay') || e.target.closest('.viewer-3d') || e.target.closest('.scan-success')) return;
+                onStart(e.clientX);
+            });
+            el.addEventListener('mousemove', (e) => onMove(e.clientX));
+            el.addEventListener('mouseup', onEnd);
+            el.addEventListener('mouseleave', onEnd);
+            el.addEventListener('touchstart', (e) => {
+                if (e.target.closest('.plat-list-overlay') || e.target.closest('.viewer-3d') || e.target.closest('.scan-success')) return;
+                onStart(e.touches[0].clientX);
+            }, { passive: true });
+            el.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.plat-list-overlay') || e.target.closest('.viewer-3d')) return;
+                onMove(e.touches[0].clientX);
+            }, { passive: true });
+            el.addEventListener('touchend', onEnd);
         }
 
-        function renderPlats(grid, list) {
-            grid.innerHTML = list.map(p => `
-                <div class="plat-card" onclick="selectPlat(${p.id})">
-                    <div class="plat-card-img">${p.emoji}</div>
-                    <div class="plat-card-info">
-                        <div class="plat-card-name">${p.name}</div>
-                        <div class="plat-card-price">${p.price}</div>
-                        <div class="plat-card-desc">${p.desc}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
+        function updateProgress() {
+            const bucket = Math.floor(targetAngle / 3);
+            visitedAngles.add(bucket);
+            const visitedDeg = visitedAngles.size * 3;
+            const progress = Math.min(visitedDeg / 360, 1);
+            const offset = circumference - progress * circumference;
+            progressRing.style.strokeDashoffset = offset;
+            const displayAngle = Math.round(visitedDeg);
+            degreeText.innerHTML = displayAngle + '<span>°</span>';
+            percentText.textContent = Math.round(progress * 100) + '%';
+            scanBarFill.style.width = (progress * 100) + '%';
+            statAngle.textContent = displayAngle + '°';
+            statPoints.textContent = Math.round(progress * 4500).toLocaleString();
 
-        function filterPlats(cat) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            const grid = document.getElementById('platGrid');
-            if (cat === 'all') {
-                renderPlats(grid, plats);
+            if (progress < 0.3) {
+                instructionMain.textContent = 'Faites le tour du plat';
+                instructionSub.innerHTML = 'Tournez à <span>360°</span> pour scanner';
+                statStatus.textContent = 'Scan...'; statStatus.style.color = '#f5a623';
+                scannerFrame.classList.remove('complete');
+            } else if (progress < 0.7) {
+                instructionMain.textContent = 'Continuer le scan...';
+                instructionSub.innerHTML = '<span>' + Math.round(progress * 100) + '%</span> scanné';
+                statStatus.textContent = 'En cours'; statStatus.style.color = '#f5a623';
+            } else if (progress < 1) {
+                instructionMain.textContent = 'Presque terminé !';
+                instructionSub.innerHTML = 'Plus que <span>' + (360 - displayAngle) + '°</span>';
+                statStatus.textContent = '90%+'; statStatus.style.color = '#22c55e';
             } else {
-                renderPlats(grid, plats.filter(p => p.category === cat));
+                instructionMain.textContent = 'Scan 360° terminé !';
+                instructionSub.innerHTML = '<span>100%</span> — Plat capturé';
+                statStatus.textContent = 'Terminé'; statStatus.style.color = '#22c55e';
+                scannerFrame.classList.add('complete');
+                if (!scanComplete) {
+                    scanComplete = true;
+                    completeScan();
+                }
             }
         }
 
-        function closePlatList() {
-            document.getElementById('platList').classList.remove('active');
+        function completeScan() {
+            stopAutoScan();
+            document.getElementById('scanSuccess').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('scanSuccess').classList.remove('active');
+                openViewer(selectedPlat);
+            }, 2200);
         }
+
+        // ==================== AUTO-SCAN ====================
+        function toggleAutoScan() {
+            autoScanActive ? stopAutoScan() : startAutoScan();
+        }
+
+        function startAutoScan() {
+            autoScanActive = true;
+            const btn = document.getElementById('autoScanBtn');
+            btn.textContent = '⏸ Pause';
+            btn.classList.add('scanning');
+            autoScanInterval = setInterval(() => {
+                targetAngle += 1.5;
+                if (targetAngle >= 360) targetAngle -= 360;
+                updateProgress();
+            }, 30);
+        }
+
+        function stopAutoScan() {
+            autoScanActive = false;
+            const btn = document.getElementById('autoScanBtn');
+            btn.textContent = '▶ Scan automatique';
+            btn.classList.remove('scanning');
+            if (autoScanInterval) { clearInterval(autoScanInterval); autoScanInterval = null; }
+        }
+
+        // ==================== 3D VIEWER (model-viewer) ====================
+        function openViewer(plat) {
+            document.getElementById('viewer3d').classList.add('active');
+            document.getElementById('dishName').textContent = plat.name;
+            document.getElementById('dishPrice').textContent = plat.price;
+            document.getElementById('dishDesc').textContent = plat.desc;
+            loadModelViewer(plat);
+        }
+
+        function closeViewer() {
+            document.getElementById('viewer3d').classList.remove('active');
+            const slot = document.getElementById('modelViewerSlot');
+            slot.innerHTML = '';
+            currentModelViewer = null;
+            document.getElementById('noModelMsg').style.display = 'none';
+            scanComplete = false;
+            visitedAngles.clear();
+            targetAngle = 0;
+            scannerFrame.classList.remove('complete');
+            updateProgress();
+        }
+
+        function loadModelViewer(plat) {
+            const slot = document.getElementById('modelViewerSlot');
+            const noModel = document.getElementById('noModelMsg');
+            const expected = document.getElementById('expectedFileName');
+            slot.innerHTML = '';
+            noModel.style.display = 'none';
+
+            const glbPath = GLB_MODELS[plat.id];
+
+            if (!glbPath) {
+                noModel.style.display = 'flex';
+                expected.textContent = 'models/' + plat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') + '.glb';
+                return;
+            }
+
+            const mv = document.createElement('model-viewer');
+            mv.setAttribute('src', glbPath);
+            mv.setAttribute('alt', 'Vue 3D de ' + plat.name);
+            mv.setAttribute('camera-controls', '');
+            mv.setAttribute('touch-action', 'pan-y');
+            mv.setAttribute('auto-rotate', '');
+            mv.setAttribute('auto-rotate-delay', '1000');
+            mv.setAttribute('rotation-per-second', '20deg');
+            mv.setAttribute('shadow-intensity', '1.2');
+            mv.setAttribute('exposure', '1.1');
+            mv.setAttribute('environment-image', 'neutral');
+            mv.setAttribute('shadow-softness', '0.5');
+            mv.setAttribute('camera-orbit', '45deg 55deg 2.5m');
+            mv.setAttribute('min-camera-orbit', 'auto auto 1.5m');
+            mv.setAttribute('max-camera-orbit', 'Infinity Infinity 5m');
+            mv.style.cssText = 'width:100%;height:100%;background:radial-gradient(ellipse at center,#181818 0%,#0a0a0a 100%);';
+
+            mv.addEventListener('error', () => {
+                slot.innerHTML = '';
+                noModel.style.display = 'flex';
+                expected.textContent = glbPath;
+            });
+
+            slot.appendChild(mv);
+            currentModelViewer = mv;
+        }
+
+        function toggleAutoRotate() {
+            if (!currentModelViewer) return;
+            const btn = document.getElementById('btnAutoRotate');
+            if (currentModelViewer.autoRotate) {
+                currentModelViewer.removeAttribute('auto-rotate');
+                btn.classList.remove('active');
+                btn.textContent = '🔄 Auto-rotation OFF';
+            } else {
+                currentModelViewer.setAttribute('auto-rotate', '');
+                btn.classList.add('active');
+                btn.textContent = '🔄 Auto-rotation ON';
+            }
+        }
+
+        function resetView() {
+            if (!currentModelViewer) return;
+            currentModelViewer.cameraOrbit = '45deg 55deg 2.5m';
+            currentModelViewer.cameraTarget = '0m 0m 0m';
+        }
+
+        // ==================== PLAT LIST ====================
+        function showPlatList() {
+            renderPlats(plats);
+            document.getElementById('platList').classList.add('active');
+        }
+
+        function renderPlats(list) {
+            const grid = document.getElementById('platGrid');
+            grid.innerHTML = list.map(p => {
+                const hasModel = GLB_MODELS[p.id];
+                return `
+                    <div class="plat-card" onclick="selectPlat(${p.id})">
+                        <div class="plat-card-img">${p.emoji}</div>
+                        <div class="plat-card-info">
+                            <div class="plat-card-name">${p.name}</div>
+                            <div class="plat-card-price">${p.price}</div>
+                            <div class="plat-card-desc">${p.desc}</div>
+                            ${hasModel ? '<div class="plat-card-badge">✓ Scan 3D dispo</div>' : ''}
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function filterPlats(cat, btn) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderPlats(cat === 'all' ? plats : plats.filter(p => p.category === cat));
+        }
+
+        function closePlatList() { document.getElementById('platList').classList.remove('active'); }
 
         function searchPlats() {
-            const query = document.getElementById('platSearch').value.toLowerCase();
-            const grid = document.getElementById('platGrid');
-            const filtered = plats.filter(p => p.name.toLowerCase().includes(query) || p.desc.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
-            renderPlats(grid, filtered);
+            const q = document.getElementById('platSearch').value.toLowerCase();
+            renderPlats(plats.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)));
         }
 
-        // Init category filters
-        function initCategoryFilters() {
+        function selectPlat(id) {
+            closePlatList();
+            const plat = plats.find(p => p.id === id);
+            if (plat) {
+                selectedPlat = plat;
+                scanComplete = false;
+                visitedAngles.clear();
+                targetAngle = 0;
+                scannerFrame.classList.remove('complete');
+                updateProgress();
+            }
+        }
+
+        (function initCategoryFilters() {
             const container = document.getElementById('catFilters');
             categories.forEach(cat => {
                 const btn = document.createElement('button');
                 btn.className = 'cat-btn';
                 btn.textContent = cat;
-                btn.onclick = function() { filterPlats(cat); };
+                btn.onclick = function() { filterPlats(cat, this); };
                 container.appendChild(btn);
             });
-        }
-        initCategoryFilters();
+        })();
 
-        function selectPlat(id) {
-            closePlatList();
-            const plat = plats.find(p => p.id === id);
-            if (plat) openViewer(plat);
-        }
-
-        // SCAN SIMULATION
-        function simulateScan() {
-            const btn = document.getElementById('scanBtn');
-            btn.classList.add('scanning');
-            showScanOverlay();
-        }
-
-        function showScanOverlay() {
-            const overlay = document.createElement('div');
-            overlay.id = 'scanProgressOverlay';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;';
-            overlay.innerHTML = `
-                <div style="position:relative;width:200px;height:200px;">
-                    <svg width="200" height="200" viewBox="0 0 200 200">
-                        <circle cx="100" cy="100" r="90" fill="none" stroke="#222" stroke-width="6"/>
-                        <circle id="scanCircle" cx="100" cy="100" r="90" fill="none" stroke="#f5a623" stroke-width="6" stroke-dasharray="565.48" stroke-dashoffset="565.48" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 0.1s linear;"/>
-                        <circle cx="100" cy="100" r="70" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="8 4"/>
-                    </svg>
-                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <span id="scanPercent" style="font-size:2.5rem;font-weight:900;color:#f5a623;">0%</span>
-                        <span style="font-size:0.8rem;color:#999;margin-top:0.25rem;">Analyse en cours</span>
-                    </div>
-                </div>
-                <div style="text-align:center;">
-                    <div id="scanStatus" style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:0.5rem;">Initialisation du scan...</div>
-                    <div id="scanDetail" style="color:#666;font-size:0.85rem;">Detection du contour du plat</div>
-                </div>
-                <div style="width:250px;height:4px;background:#222;border-radius:2px;overflow:hidden;">
-                    <div id="scanBar" style="width:0%;height:100%;background:#f5a623;border-radius:2px;transition:width 0.1s linear;"></div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            const circle = document.getElementById('scanCircle');
-            const percent = document.getElementById('scanPercent');
-            const bar = document.getElementById('scanBar');
-            const status = document.getElementById('scanStatus');
-            const detail = document.getElementById('scanDetail');
-            const circumference = 2 * Math.PI * 90;
-
-            const steps = [
-                { p: 5, s: 'Detection du plat...', d: 'Analyse du contour', t: 200 },
-                { p: 15, s: 'Scan du contour...', d: 'Reconnaissance de la forme', t: 200 },
-                { p: 25, s: 'Analyse des couleurs...', d: 'Capture des textures', t: 200 },
-                { p: 35, s: 'Scan de la surface...', d: 'Mesure de la profondeur', t: 150 },
-                { p: 45, s: 'Analyse des details...', d: 'Detection des ingredients', t: 150 },
-                { p: 55, s: 'Scan 360° en cours...', d: 'Rotation et capture multiple', t: 150 },
-                { p: 65, s: 'Reconstruction 3D...', d: 'Generation du maillage', t: 150 },
-                { p: 75, s: 'Application des textures...', d: 'Rendu haute definition', t: 150 },
-                { p: 85, s: 'Eclairage dynamique...', d: 'Calcul des ombres', t: 150 },
-                { p: 92, s: 'Finalisation...', d: 'Optimisation du rendu', t: 200 },
-                { p: 100, s: 'Scan termine !', d: 'Plat detecte avec succes', t: 300 }
-            ];
-
-            let i = 0;
-            function nextStep() {
-                if (i >= steps.length) {
-                    setTimeout(() => {
-                        overlay.remove();
-                        document.getElementById('scanBtn').classList.remove('scanning');
-                        const randomPlat = plats[Math.floor(Math.random() * plats.length)];
-                        openViewer(randomPlat);
-                    }, 500);
-                    return;
-                }
-                const step = steps[i];
-                const offset = circumference - (step.p / 100) * circumference;
-                circle.style.strokeDashoffset = offset;
-                percent.textContent = step.p + '%';
-                bar.style.width = step.p + '%';
-                status.textContent = step.s;
-                detail.textContent = step.d;
-                i++;
-                setTimeout(nextStep, step.t);
-            }
-            nextStep();
-        }
-
-        // 3D VIEWER
-        function openViewer(plat) {
-            document.getElementById('loading').classList.add('active');
-
-            setTimeout(() => {
-                document.getElementById('loading').classList.remove('active');
-                document.getElementById('viewer3d').classList.add('active');
-                document.getElementById('dishName').textContent = plat.name;
-                document.getElementById('dishPrice').textContent = plat.price;
-                document.getElementById('dishDesc').textContent = plat.desc;
-
-                init3D(plat);
-            }, 600);
-        }
-
-        function closeViewer() {
-            document.getElementById('viewer3d').classList.remove('active');
-            if (renderer) {
-                renderer.dispose();
-                renderer = null;
-            }
-            const canvas = document.getElementById('viewer3dCanvas');
-            canvas.remove();
-            const newCanvas = document.createElement('canvas');
-            newCanvas.id = 'viewer3dCanvas';
-            document.getElementById('viewer3d').insertBefore(newCanvas, document.getElementById('viewer3d').firstChild);
-        }
-
-        function init3D(plat) {
-            const canvas = document.getElementById('viewer3dCanvas');
-            const container = document.getElementById('viewer3d');
-
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0a);
-            scene.fog = new THREE.Fog(0x0a0a0a, 8, 20);
-
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 3, 5);
-            camera.lookAt(0, 0, 0);
-
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
-            renderer.outputEncoding = THREE.sRGBEncoding;
-
-            // ENVIRONMENT LIGHTING
-            const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.3);
-            scene.add(ambientLight);
-
-            // Main key light (warm)
-            const keyLight = new THREE.SpotLight(0xfff0d4, 2, 15, Math.PI / 4, 0.5, 1);
-            keyLight.position.set(3, 8, 4);
-            keyLight.castShadow = true;
-            keyLight.shadow.mapSize.width = 2048;
-            keyLight.shadow.mapSize.height = 2048;
-            keyLight.shadow.bias = -0.0001;
-            scene.add(keyLight);
-
-            // Fill light (cool blue)
-            const fillLight = new THREE.SpotLight(0xc4d4ff, 0.6, 12, Math.PI / 3, 0.6, 1);
-            fillLight.position.set(-4, 5, -2);
-            scene.add(fillLight);
-
-            // Rim/back light
-            const rimLight = new THREE.SpotLight(0xffffff, 1, 10, Math.PI / 5, 0.3, 1);
-            rimLight.position.set(0, 6, -6);
-            scene.add(rimLight);
-
-            // Warm accent
-            const accentLight = new THREE.PointLight(0xf5a623, 0.4, 8);
-            accentLight.position.set(-2, 2, 3);
-            scene.add(accentLight);
-
-            // Bottom bounce light
-            const bounceLight = new THREE.PointLight(0xfff5e6, 0.2, 6);
-            bounceLight.position.set(0, -1, 0);
-            scene.add(bounceLight);
-
-            // TABLE SURFACE
-            const tableGeo = new THREE.CylinderGeometry(3, 3, 0.08, 64);
-            const tableMat = new THREE.MeshStandardMaterial({
-                color: 0x1a1a1a,
-                metalness: 0.4,
-                roughness: 0.2,
-                envMapIntensity: 0.5
-            });
-            const table = new THREE.Mesh(tableGeo, tableMat);
-            table.position.y = -0.55;
-            table.receiveShadow = true;
-            scene.add(table);
-
-            // PLATE - Multiple layers for realism
-            // Plate base (slightly raised edge)
-            const plateBaseGeo = new THREE.CylinderGeometry(1.6, 1.55, 0.08, 64);
-            const plateBaseMat = new THREE.MeshStandardMaterial({
-                color: 0xfafafa,
-                metalness: 0.05,
-                roughness: 0.15,
-                envMapIntensity: 0.8
-            });
-            const plateBase = new THREE.Mesh(plateBaseGeo, plateBaseMat);
-            plateBase.position.y = -0.47;
-            plateBase.castShadow = true;
-            plateBase.receiveShadow = true;
-            scene.add(plateBase);
-
-            // Plate inner (slightly depressed)
-            const plateInnerGeo = new THREE.CylinderGeometry(1.35, 1.35, 0.03, 64);
-            const plateInnerMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                metalness: 0.02,
-                roughness: 0.1,
-                envMapIntensity: 1
-            });
-            const plateInner = new THREE.Mesh(plateInnerGeo, plateInnerMat);
-            plateInner.position.y = -0.42;
-            plateInner.receiveShadow = true;
-            scene.add(plateInner);
-
-            // Plate rim highlight
-            const rimGeo = new THREE.TorusGeometry(1.5, 0.03, 16, 128);
-            const rimMat = new THREE.MeshStandardMaterial({
-                color: 0xf0f0f0,
-                metalness: 0.6,
-                roughness: 0.1,
-                envMapIntensity: 1.2
-            });
-            const rim = new THREE.Mesh(rimGeo, rimMat);
-            rim.position.y = -0.43;
-            rim.rotation.x = Math.PI / 2;
-            scene.add(rim);
-
-            // Gold rim accent
-            const goldRimGeo = new THREE.TorusGeometry(1.52, 0.008, 8, 128);
-            const goldRimMat = new THREE.MeshStandardMaterial({
-                color: 0xd4a843,
-                metalness: 0.9,
-                roughness: 0.1
-            });
-            const goldRim = new THREE.Mesh(goldRimGeo, goldRimMat);
-            goldRim.position.y = -0.42;
-            goldRim.rotation.x = Math.PI / 2;
-            scene.add(goldRim);
-
-            // FOOD - Detailed based on category
-            buildFood(plat);
-
-            // SAUCE DRIZZLE
-            addSauce(plat);
-
-            // GARNISH
-            addGarnish(plat);
-
-            // STEAM PARTICLES
-            addSteam(plat);
-
-            // Ground shadow
-            const groundGeo = new THREE.PlaneGeometry(20, 20);
-            const groundMat = new THREE.ShadowMaterial({ opacity: 0.4 });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -0.59;
-            ground.receiveShadow = true;
-            scene.add(ground);
-
-            setupInteraction(canvas);
-            autoRotate = true;
-            animate();
-        }
-
-        function buildFood(plat) {
-            const c = plat.color;
-            let foodGroup = new THREE.Group();
-
-            if (plat.shape === 'cylinder') {
-                // Main food body - multi-layered
-                const layers = 3 + Math.floor(Math.random() * 2);
-                for (let i = 0; i < layers; i++) {
-                    const r = 0.85 - i * 0.1 + Math.random() * 0.05;
-                    const h = 0.15 + Math.random() * 0.1;
-                    const geo = new THREE.CylinderGeometry(r, r + 0.05, h, 48);
-                    const shade = new THREE.Color(c).offsetHSL(0, 0, (Math.random() - 0.5) * 0.05);
-                    const mat = new THREE.MeshStandardMaterial({
-                        color: shade,
-                        roughness: 0.4 + Math.random() * 0.3,
-                        metalness: 0.02,
-                        envMapIntensity: 0.3
-                    });
-                    const layer = new THREE.Mesh(geo, mat);
-                    layer.position.y = -0.35 + i * 0.12;
-                    layer.castShadow = true;
-
-                    // Slight random rotation for organic feel
-                    layer.rotation.y = Math.random() * 0.1;
-                    layer.rotation.z = (Math.random() - 0.5) * 0.02;
-
-                    // Deform vertices
-                    const pos = layer.geometry.attributes.position;
-                    for (let j = 0; j < pos.count; j++) {
-                        const x = pos.getX(j);
-                        const y = pos.getY(j);
-                        const z = pos.getZ(j);
-                        const noise = Math.sin(x * 5) * Math.cos(z * 5) * 0.02;
-                        pos.setX(j, x + noise);
-                        pos.setZ(j, z + noise);
-                    }
-                    pos.needsUpdate = true;
-                    layer.geometry.computeVertexNormals();
-                    foodGroup.add(layer);
-                }
-
-                // Top surface detail
-                const topGeo = new THREE.CylinderGeometry(0.7, 0.75, 0.05, 48);
-                const topMat = new THREE.MeshStandardMaterial({
-                    color: new THREE.Color(c).offsetHSL(0.02, 0, 0.05),
-                    roughness: 0.3,
-                    metalness: 0.05
-                });
-                const top = new THREE.Mesh(topGeo, topMat);
-                top.position.y = -0.35 + layers * 0.12;
-                top.castShadow = true;
-                foodGroup.add(top);
-
-            } else if (plat.shape === 'box') {
-                // Rectangular food (steak, fish, etc.)
-                const baseGeo = new THREE.BoxGeometry(1.6, 0.35, 1.2, 8, 4, 8);
-                const baseMat = new THREE.MeshStandardMaterial({
-                    color: c,
-                    roughness: 0.5,
-                    metalness: 0.02
-                });
-                const base = new THREE.Mesh(baseGeo, baseMat);
-
-                // Deform for organic shape
-                const pos = base.geometry.attributes.position;
-                for (let i = 0; i < pos.count; i++) {
-                    const x = pos.getX(i);
-                    const y = pos.getY(i);
-                    const z = pos.getZ(i);
-                    const edge = Math.max(Math.abs(x), Math.abs(z));
-                    const taper = 1 - edge * 0.15;
-                    pos.setY(i, y * taper + Math.sin(x * 3) * 0.02 + Math.cos(z * 4) * 0.015);
-                    pos.setX(i, x + Math.sin(y * 8) * 0.01);
-                    pos.setZ(i, z + Math.cos(y * 6) * 0.01);
-                }
-                pos.needsUpdate = true;
-                base.geometry.computeVertexNormals();
-                base.position.y = -0.22;
-                base.castShadow = true;
-                foodGroup.add(base);
-
-                // Grill marks
-                for (let i = 0; i < 4; i++) {
-                    const markGeo = new THREE.BoxGeometry(1.4, 0.01, 0.04);
-                    const markMat = new THREE.MeshStandardMaterial({
-                        color: 0x2a1506,
-                        roughness: 0.8,
-                        metalness: 0
-                    });
-                    const mark = new THREE.Mesh(markGeo, markMat);
-                    mark.position.set(0, 0.01, -0.4 + i * 0.25);
-                    mark.rotation.y = 0.15;
-                    foodGroup.add(mark);
-                }
-
-                // Glaze/sheen on top
-                const glazeGeo = new THREE.BoxGeometry(1.5, 0.01, 1.1);
-                const glazeMat = new THREE.MeshStandardMaterial({
-                    color: new THREE.Color(c).offsetHSL(0, -0.1, 0.1),
-                    roughness: 0.2,
-                    metalness: 0.1,
-                    transparent: true,
-                    opacity: 0.6
-                });
-                const glaze = new THREE.Mesh(glazeGeo, glazeMat);
-                glaze.position.y = 0.18;
-                foodGroup.add(glaze);
-
-            } else {
-                // Cone (ice cream, desserts)
-                const baseGeo = new THREE.SphereGeometry(0.55, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.6);
-                const baseMat = new THREE.MeshStandardMaterial({
-                    color: c,
-                    roughness: 0.25,
-                    metalness: 0.02
-                });
-                const base = new THREE.Mesh(baseGeo, baseMat);
-                base.position.y = -0.1;
-                base.castShadow = true;
-
-                // Deform for scoop shape
-                const pos = base.geometry.attributes.position;
-                for (let i = 0; i < pos.count; i++) {
-                    const y = pos.getY(i);
-                    if (y < 0.1) {
-                        pos.setY(i, y - 0.05);
-                    }
-                }
-                pos.needsUpdate = true;
-                base.geometry.computeVertexNormals();
-                foodGroup.add(base);
-
-                // Drip effect
-                for (let i = 0; i < 3; i++) {
-                    const dripGeo = new THREE.CylinderGeometry(0.03, 0.015, 0.2 + Math.random() * 0.15, 8);
-                    const dripMat = new THREE.MeshStandardMaterial({
-                        color: new THREE.Color(c).offsetHSL(0.05, 0, -0.1),
-                        roughness: 0.2,
-                        metalness: 0.05
-                    });
-                    const drip = new THREE.Mesh(dripGeo, dripMat);
-                    const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
-                    drip.position.set(
-                        Math.cos(angle) * 0.45,
-                        -0.15,
-                        Math.sin(angle) * 0.45
-                    );
-                    drip.rotation.z = (Math.random() - 0.5) * 0.3;
-                    foodGroup.add(drip);
-                }
-            }
-
-            scene.add(foodGroup);
-            currentMesh = foodGroup;
-        }
-
-        function addSauce(plat) {
-            const sauceColors = {
-                'Plats': 0x8B0000,
-                'Pizzas': 0xCC3333,
-                'Pâtes': 0xCC3333,
-                'Poissons': 0xDAA520,
-                'Entrées': 0xD2691E,
-                'Desserts': 0x3C1414,
-                'Végétarien': 0x228B22,
-                'Salades': 0x556B2F
-            };
-            const sauceColor = sauceColors[plat.category] || 0x8B4513;
-
-            // Sauce drizzle on plate
-            for (let i = 0; i < 6; i++) {
-                const curve = new THREE.CatmullRomCurve3([
-                    new THREE.Vector3((Math.random() - 0.5) * 1.2, -0.41, (Math.random() - 0.5) * 1.2),
-                    new THREE.Vector3((Math.random() - 0.5) * 0.8, -0.41, (Math.random() - 0.5) * 0.8),
-                    new THREE.Vector3((Math.random() - 0.5) * 0.4, -0.41, (Math.random() - 0.5) * 0.4)
-                ]);
-                const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.015 + Math.random() * 0.01, 8, false);
-                const tubeMat = new THREE.MeshStandardMaterial({
-                    color: sauceColor,
-                    roughness: 0.15,
-                    metalness: 0.05,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                const tube = new THREE.Mesh(tubeGeo, tubeMat);
-                scene.add(tube);
-            }
-
-            // Sauce pool
-            const poolGeo = new THREE.CircleGeometry(0.3 + Math.random() * 0.2, 32);
-            const poolMat = new THREE.MeshStandardMaterial({
-                color: sauceColor,
-                roughness: 0.1,
-                metalness: 0.08,
-                transparent: true,
-                opacity: 0.7
-            });
-            const pool = new THREE.Mesh(poolGeo, poolMat);
-            pool.rotation.x = -Math.PI / 2;
-            pool.position.set((Math.random() - 0.5) * 0.8, -0.41, (Math.random() - 0.5) * 0.8);
-            scene.add(pool);
-        }
-
-        function addGarnish(plat) {
-            const garnishTypes = [
-                { color: 0x228B22, size: 0.04, type: 'herb' },
-                { color: 0x32CD32, size: 0.03, type: 'herb' },
-                { color: 0xFF4500, size: 0.025, type: 'berry' },
-                { color: 0xFFD700, size: 0.02, type: 'seed' },
-                { color: 0x8B4513, size: 0.015, type: 'spice' },
-                { color: 0xFF6347, size: 0.035, type: 'pepper' },
-                { color: 0x90EE90, size: 0.05, type: 'leaf' }
-            ];
-
-            // Herbs scattered
-            for (let i = 0; i < 12; i++) {
-                const g = garnishTypes[Math.floor(Math.random() * garnishTypes.length)];
-                let geo;
-                if (g.type === 'leaf') {
-                    geo = new THREE.PlaneGeometry(g.size, g.size * 1.5);
-                } else if (g.type === 'herb') {
-                    geo = new THREE.BoxGeometry(g.size, 0.005, g.size * 2);
-                } else {
-                    geo = new THREE.SphereGeometry(g.size, 6, 6);
-                }
-                const mat = new THREE.MeshStandardMaterial({
-                    color: g.color,
-                    roughness: 0.6,
-                    metalness: 0,
-                    side: THREE.DoubleSide
-                });
-                const mesh = new THREE.Mesh(geo, mat);
-                const angle = Math.random() * Math.PI * 2;
-                const radius = 0.3 + Math.random() * 0.8;
-                mesh.position.set(
-                    Math.cos(angle) * radius,
-                    -0.38 + Math.random() * 0.15,
-                    Math.sin(angle) * radius
-                );
-                mesh.rotation.set(
-                    Math.random() * 0.5,
-                    Math.random() * Math.PI * 2,
-                    Math.random() * 0.3
-                );
-                mesh.castShadow = true;
-                scene.add(mesh);
-            }
-
-            // Sesame seeds / small particles
-            for (let i = 0; i < 20; i++) {
-                const geo = new THREE.SphereGeometry(0.008, 4, 4);
-                const mat = new THREE.MeshStandardMaterial({
-                    color: Math.random() > 0.5 ? 0xFFF8DC : 0x2F2F2F,
-                    roughness: 0.4
-                });
-                const seed = new THREE.Mesh(geo, mat);
-                const angle = Math.random() * Math.PI * 2;
-                const radius = 0.2 + Math.random() * 1;
-                seed.position.set(
-                    Math.cos(angle) * radius,
-                    -0.4 + Math.random() * 0.2,
-                    Math.sin(angle) * radius
-                );
-                scene.add(seed);
-            }
-        }
-
-        function addSteam(plat) {
-            const hotCategories = ['Plats', 'Pizzas', 'Pâtes', 'Entrées', 'Végétarien', 'International'];
-            if (!hotCategories.includes(plat.category)) return;
-
-            const steamGroup = new THREE.Group();
-            const particleCount = 30;
-
-            for (let i = 0; i < particleCount; i++) {
-                const geo = new THREE.SphereGeometry(0.02 + Math.random() * 0.03, 8, 8);
-                const mat = new THREE.MeshBasicMaterial({
-                    color: 0xffffff,
-                    transparent: true,
-                    opacity: 0.08 + Math.random() * 0.08
-                });
-                const particle = new THREE.Mesh(geo, mat);
-                particle.position.set(
-                    (Math.random() - 0.5) * 0.8,
-                    Math.random() * 0.5,
-                    (Math.random() - 0.5) * 0.8
-                );
-                particle.userData = {
-                    speed: 0.005 + Math.random() * 0.01,
-                    drift: (Math.random() - 0.5) * 0.003,
-                    startY: particle.position.y,
-                    maxHeight: 0.8 + Math.random() * 0.5
-                };
-                steamGroup.add(particle);
-            }
-
-            steamGroup.userData.isSteam = true;
-            scene.add(steamGroup);
-        }
-
-        function setupInteraction(canvas) {
-            canvas.addEventListener('pointerdown', (e) => {
-                isDragging = true;
-                previousMousePosition = { x: e.clientX, y: e.clientY };
-                autoRotate = false;
-            });
-
-            canvas.addEventListener('pointermove', (e) => {
-                if (!isDragging || !currentMesh) return;
-                const deltaX = e.clientX - previousMousePosition.x;
-                const deltaY = e.clientY - previousMousePosition.y;
-                currentMesh.rotation.y += deltaX * 0.01;
-                currentMesh.rotation.x += deltaY * 0.005;
-                currentMesh.rotation.x = Math.max(-0.5, Math.min(0.5, currentMesh.rotation.x));
-                previousMousePosition = { x: e.clientX, y: e.clientY };
-            });
-
-            canvas.addEventListener('pointerup', () => { isDragging = false; });
-            canvas.addEventListener('pointerleave', () => { isDragging = false; });
-
-            // Zoom with scroll
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                camera.position.z = Math.max(2, Math.min(6, camera.position.z + e.deltaY * 0.005));
-            }, { passive: false });
-
-            // Pinch zoom
-            let lastTouchDistance = 0;
-            canvas.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 2) {
-                    lastTouchDistance = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                }
-            });
-
-            canvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2) {
-                    const dist = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    const delta = lastTouchDistance - dist;
-                    camera.position.z = Math.max(2, Math.min(6, camera.position.z + delta * 0.01));
-                    lastTouchDistance = dist;
-                }
-            });
-        }
-
-        function toggleAutoRotate() {
-            autoRotate = !autoRotate;
-        }
-
-        function animate() {
-            if (!renderer || !document.getElementById('viewer3d').classList.contains('active')) return;
-            requestAnimationFrame(animate);
-
-            const time = Date.now() * 0.001;
-
-            if (autoRotate && currentMesh) {
-                currentMesh.rotation.y += 0.005;
-            }
-
-            // Subtle float for food
-            if (currentMesh) {
-                currentMesh.position.y = Math.sin(time * 0.8) * 0.02;
-            }
-
-            // Animate steam particles
-            scene.children.forEach(child => {
-                if (child.isGroup && child.userData.isSteam) {
-                    child.children.forEach(particle => {
-                        const d = particle.userData;
-                        particle.position.y += d.speed;
-                        particle.position.x += d.drift;
-                        particle.material.opacity = 0.1 * (1 - (particle.position.y - d.startY) / d.maxHeight);
-                        if (particle.position.y > d.startY + d.maxHeight) {
-                            particle.position.y = d.startY;
-                            particle.position.x = (Math.random() - 0.5) * 0.8;
-                        }
-                    });
-                }
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        // Find main mesh for rotation
-        const origInit3D = init3D;
-        init3D = function(plat) {
-            origInit3D(plat);
-        };
-
-        // Resize
-        window.addEventListener('resize', () => {
-            if (camera && renderer) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        });
-
-        // Init camera
+        // INIT
         startCamera();
+        setupDragTracking();
     </script>
-
 </body>
 </html>
