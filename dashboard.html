@@ -229,6 +229,56 @@
             opacity: 0.5;
         }
 
+        /* Scanner CTA */
+        .scanner-cta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: linear-gradient(135deg, var(--primary), #e6951a);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-decoration: none;
+            color: #000;
+            transition: all 0.3s;
+        }
+
+        .scanner-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 166, 35, 0.3);
+        }
+
+        .scanner-cta-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-cta-text {
+            flex: 1;
+        }
+
+        .scanner-cta-text strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .scanner-cta-text span {
+            font-size: 0.75rem;
+            color: rgba(0,0,0,0.6);
+        }
+
+        .scanner-cta-arrow {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
         /* Abonnement */
         .plan-current {
             background: linear-gradient(135deg, var(--primary), #e6951a);
@@ -516,6 +566,15 @@
                     <div class="stat-label">Croissance</div>
                 </div>
             </div>
+
+            <a href="scanner.html" class="scanner-cta">
+                <div class="scanner-cta-icon">📷</div>
+                <div class="scanner-cta-text">
+                    <strong>Scanner un plat</strong>
+                    <span>Visualisez vos plats en 360° avec la camera</span>
+                </div>
+                <div class="scanner-cta-arrow">→</div>
+            </a>
 
             <div class="plats-list-mobile">
                 <h3 class="mb-1">Mes Plats Récents</h3>
