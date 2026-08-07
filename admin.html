@@ -364,6 +364,7 @@
         </div>
     </div>
 
+    <script src="vmp-tracker.js"></script>
     <script>
         const ADMIN_CREDENTIALS = {
             email: 'admin@voirmonplat.com',
@@ -422,6 +423,7 @@
             }
 
             setTimeout(() => {
+                VMPTracker.trackAdminLogin();
                 window.location.href = 'admin-panel.html';
             }, 800);
         });

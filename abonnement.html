@@ -505,6 +505,7 @@
         <a href="dashboard.html" class="btn btn-primary btn-lg">Acceder a mon espace</a>
     </section>
 
+    <script src="vmp-tracker.js"></script>
     <script>
         let selectedPaymentMethod = 'card';
 
@@ -578,6 +579,7 @@
             let invoices = JSON.parse(localStorage.getItem('vmp_invoices')) || [];
             invoices.push(invoice);
             localStorage.setItem('vmp_invoices', JSON.stringify(invoices));
+            VMPTracker.trackSubscription(plan, price);
 
             localStorage.setItem('vmp_subscription', JSON.stringify({
                 plan: plan,

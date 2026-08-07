@@ -409,6 +409,101 @@
 
         .cat-btn:hover { border-color: #f5a623; color: #fff; }
         .cat-btn.active { background: #f5a623; border-color: #f5a623; color: #000; font-weight: 600; }
+
+        /* ==================== SCAN PHOTGRAMMETRIE ==================== */
+        .photo-scan-overlay {
+            position: fixed; inset: 0; background: #0a0a0a;
+            display: none; z-index: 160; flex-direction: column;
+            overflow-y: auto;
+        }
+        .photo-scan-overlay.active { display: flex; }
+
+        .photo-scan-topbar {
+            padding: 1.25rem 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .photo-scan-topbar h2 { font-size: 1rem; font-weight: 700; }
+
+        .photo-stage {
+            position: relative; width: 100%; max-width: 480px; margin: 0 auto;
+            aspect-ratio: 3/4; background: #000; border-radius: 14px;
+            overflow: hidden; border: 1px solid #2a2620;
+        }
+        .photo-stage video, .photo-stage canvas.photo-overlay {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        }
+        .photo-stage canvas.photo-overlay { pointer-events: none; }
+
+        .photo-badge {
+            position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+            background: rgba(14,13,11,0.75); backdrop-filter: blur(6px);
+            border: 1px solid rgba(245,166,35,0.5); border-radius: 999px;
+            padding: 6px 16px; font-size: 0.8rem; color: #f5a623;
+            font-weight: 600; white-space: nowrap;
+        }
+
+        .photo-controls {
+            width: 100%; max-width: 480px; margin: 16px auto 0;
+            display: flex; flex-direction: column; gap: 10px; padding: 0 1rem;
+        }
+        .photo-controls button {
+            font-family: inherit; font-size: 0.95rem; font-weight: 600;
+            padding: 13px 18px; border-radius: 10px; border: none;
+            cursor: pointer; transition: transform 0.12s ease;
+        }
+        .photo-controls button:active { transform: scale(0.97); }
+        .photo-controls button:disabled { opacity: 0.35; cursor: not-allowed; }
+        .photo-btn-primary { background: #f5a623; color: #1a1508; }
+        .photo-btn-secondary { background: transparent; color: #fff; border: 1px solid #3a352a; }
+        .photo-btn-danger { background: #c15b4a; color: #fff; }
+
+        .photo-thumbs {
+            width: 100%; max-width: 480px; margin: 14px auto 0;
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px;
+            padding: 0 1rem;
+        }
+        .photo-thumbs img {
+            width: 100%; aspect-ratio: 1; object-fit: cover;
+            border-radius: 4px; border: 1px solid rgba(245,166,35,0.4);
+        }
+
+        .photo-status {
+            width: 100%; max-width: 480px; margin: 12px auto 24px;
+            font-size: 0.85rem; color: #a89a7c; text-align: center;
+            padding: 0 1rem; min-height: 20px;
+        }
+        .photo-status.ok { color: #7fae6f; }
+        .photo-status.err { color: #c15b4a; }
+
+        #photoViewerWrap {
+            display: none; width: 100%; max-width: 480px; margin: 0 auto 24px;
+            padding: 0 1rem;
+        }
+        #photoViewerWrap model-viewer {
+            width: 100%; aspect-ratio: 1/1; border-radius: 14px;
+            background: #000;
+        }
+
+        .photo-scan-desc {
+            text-align: center; color: #a89a7c; font-size: 0.9rem;
+            max-width: 420px; margin: 0 auto 16px; padding: 0 1rem;
+            line-height: 1.5;
+        }
+
+        .scan-mode-switch {
+            display: flex; gap: 0.5rem; padding: 0.5rem 1rem;
+            overflow-x: auto; white-space: nowrap;
+        }
+        .scan-mode-btn {
+            padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer; border: 1px solid #333;
+            background: transparent; color: #999; transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .scan-mode-btn:hover { border-color: #f5a623; color: #fff; }
+        .scan-mode-btn.active { background: #f5a623; border-color: #f5a623; color: #000; }
     </style>
 </head>
 <body>
@@ -425,6 +520,11 @@
                     <div class="scan-subtitle">VOIR MON PLAT+</div>
                 </div>
                 <button class="scan-menu-btn" onclick="showPlatList()">📋</button>
+            </div>
+
+            <div class="scan-mode-switch">
+                <button class="scan-mode-btn active" onclick="switchScanMode('preview',this)">👁️ Preview</button>
+                <button class="scan-mode-btn" onclick="switchScanMode('photo',this)">📸 Scan Réaliste</button>
             </div>
 
             <div class="scanner-frame-area">
@@ -550,6 +650,38 @@
         </div>
     </div>
 
+    <!-- ==================== SCAN PHOTogramMETRIE ==================== -->
+    <div class="photo-scan-overlay" id="photoScanView">
+        <div class="photo-scan-topbar">
+            <button class="scan-back" onclick="switchScanMode('preview')">←</button>
+            <h2>Scan Réaliste 360°</h2>
+            <div style="width:40px;"></div>
+        </div>
+
+        <p class="photo-scan-desc">Placez le plat au centre, puis tournez lentement tout autour en gardant le cadre centré. 24 à 36 photos donnent le meilleur résultat.</p>
+
+        <div class="photo-stage">
+            <video id="photoVideo" autoplay playsinline muted></video>
+            <canvas id="photoOverlayCanvas" class="photo-overlay"></canvas>
+            <div class="photo-badge" id="photoProgressBadge">0 / 24 photos</div>
+        </div>
+
+        <div class="photo-controls">
+            <button class="photo-btn-primary" id="photoStartBtn" onclick="photoStartCamera()">Activer la caméra</button>
+            <button class="photo-btn-secondary" id="photoAutoBtn" onclick="photoToggleAuto()" disabled>Capture auto (tous les 800 ms)</button>
+            <button class="photo-btn-secondary" id="photoShotBtn" onclick="photoCaptureFrame()" disabled>📸 Prendre une photo</button>
+            <button class="photo-btn-danger" id="photoReconstructBtn" onclick="photoReconstruct()" disabled>✨ Générer la vue 360° réaliste</button>
+        </div>
+
+        <div class="photo-thumbs" id="photoThumbs"></div>
+        <div class="photo-status" id="photoStatus"></div>
+
+        <div id="photoViewerWrap">
+            <model-viewer id="photoViewer" camera-controls auto-rotate shadow-intensity="1" exposure="1" tone-mapping="aces"></model-viewer>
+        </div>
+    </div>
+
+    <script src="vmp-tracker.js"></script>
     <script>
         /*
          * ==============================================
@@ -940,6 +1072,7 @@
                 scannerFrame.classList.add('complete');
                 if (!scanComplete) {
                     scanComplete = true;
+                    VMPTracker.trackScan(selectedPlat.name);
                     completeScan();
                 }
             }
@@ -950,6 +1083,7 @@
             document.getElementById('scanSuccess').classList.add('active');
             setTimeout(() => {
                 document.getElementById('scanSuccess').classList.remove('active');
+                VMPTracker.trackScanComplete(selectedPlat.name);
                 openViewer(selectedPlat);
             }, 2200);
         }
@@ -1126,6 +1260,172 @@
         // INIT
         startCamera();
         setupDragTracking();
+
+        // ==================== MODE SWITCH ====================
+        function switchScanMode(mode, btn) {
+            document.querySelectorAll('.scan-mode-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            else document.querySelector(`.scan-mode-btn[onclick*="${mode}"]`).classList.add('active');
+
+            if (mode === 'photo') {
+                document.getElementById('scannerView').style.display = 'none';
+                document.getElementById('photoScanView').classList.add('active');
+                stopCamera();
+            } else {
+                document.getElementById('scannerView').style.display = '';
+                document.getElementById('photoScanView').classList.remove('active');
+                photoStopAll();
+                if (!cameraStream) startCamera();
+            }
+        }
+
+        // ==================== SCAN PHOTogramMETRIE ====================
+        const photoVideo = document.getElementById('photoVideo');
+        const photoOverlayCanvas = document.getElementById('photoOverlayCanvas');
+        const photoCtx = photoOverlayCanvas.getContext('2d');
+        const photoStartBtn = document.getElementById('photoStartBtn');
+        const photoAutoBtn = document.getElementById('photoAutoBtn');
+        const photoShotBtn = document.getElementById('photoShotBtn');
+        const photoReconstructBtn = document.getElementById('photoReconstructBtn');
+        const photoThumbsEl = document.getElementById('photoThumbs');
+        const photoStatusEl = document.getElementById('photoStatus');
+        const photoProgressBadge = document.getElementById('photoProgressBadge');
+
+        const PHOTO_TARGET = 24;
+        let photoFrames = [];
+        let photoAutoTimer = null;
+        let photoStream = null;
+
+        function photoSetStatus(msg, cls) {
+            photoStatusEl.textContent = msg;
+            photoStatusEl.className = 'photo-status' + (cls ? ' ' + cls : '');
+        }
+
+        function photoStopAll() {
+            if (photoAutoTimer) { clearInterval(photoAutoTimer); photoAutoTimer = null; }
+            if (photoStream) { photoStream.getTracks().forEach(t => t.stop()); photoStream = null; }
+        }
+
+        async function photoStartCamera() {
+            try {
+                photoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1920 } },
+                    audio: false
+                });
+                photoVideo.srcObject = photoStream;
+                await photoVideo.play();
+                photoResizeOverlay();
+                photoAutoBtn.disabled = false;
+                photoShotBtn.disabled = false;
+                photoStartBtn.disabled = true;
+                photoSetStatus('Caméra active. Tournez lentement autour du plat.');
+            } catch (e) {
+                photoSetStatus('Impossible d\'accéder à la caméra : ' + e.message, 'err');
+            }
+        }
+
+        function photoResizeOverlay() {
+            photoOverlayCanvas.width = photoVideo.videoWidth || 640;
+            photoOverlayCanvas.height = photoVideo.videoHeight || 480;
+            photoDrawGuide();
+        }
+        photoVideo.addEventListener('loadedmetadata', photoResizeOverlay);
+
+        function photoDrawGuide() {
+            const w = photoOverlayCanvas.width, h = photoOverlayCanvas.height;
+            photoCtx.clearRect(0, 0, w, h);
+            const cx = w / 2, cy = h / 2;
+            const r = Math.min(w, h) * 0.32;
+            photoCtx.strokeStyle = 'rgba(245,166,35,0.85)';
+            photoCtx.lineWidth = 3;
+            photoCtx.beginPath();
+            photoCtx.ellipse(cx, cy, r, r * 0.55, 0, 0, Math.PI * 2);
+            photoCtx.stroke();
+            photoCtx.setLineDash([6, 6]);
+            photoCtx.strokeStyle = 'rgba(255,255,255,0.35)';
+            photoCtx.beginPath();
+            photoCtx.moveTo(cx - r - 20, cy);
+            photoCtx.lineTo(cx + r + 20, cy);
+            photoCtx.stroke();
+            photoCtx.setLineDash([]);
+        }
+
+        function photoCaptureFrame() {
+            const c = document.createElement('canvas');
+            c.width = photoVideo.videoWidth;
+            c.height = photoVideo.videoHeight;
+            const cctx = c.getContext('2d');
+            cctx.drawImage(photoVideo, 0, 0, c.width, c.height);
+            c.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                photoFrames.push({ blob: blob, url: url });
+                photoRenderThumb(url);
+                photoUpdateProgress();
+            }, 'image/jpeg', 0.92);
+        }
+
+        function photoRenderThumb(url) {
+            const img = document.createElement('img');
+            img.src = url;
+            photoThumbsEl.appendChild(img);
+        }
+
+        function photoUpdateProgress() {
+            photoProgressBadge.textContent = photoFrames.length + ' / ' + PHOTO_TARGET + ' photos';
+            if (photoFrames.length >= 12) {
+                photoReconstructBtn.disabled = false;
+            }
+            if (photoFrames.length >= PHOTO_TARGET && photoAutoTimer) {
+                photoStopAuto();
+                photoSetStatus('Nombre de photos atteint. Vous pouvez générer la vue 360°.', 'ok');
+            }
+        }
+
+        function photoToggleAuto() {
+            if (photoAutoTimer) { photoStopAuto(); return; }
+            photoAutoTimer = setInterval(photoCaptureFrame, 800);
+            photoAutoBtn.textContent = '⏸ Arrêter la capture auto';
+            photoSetStatus('Capture automatique en cours — tournez régulièrement autour du plat.');
+        }
+
+        function photoStopAuto() {
+            clearInterval(photoAutoTimer);
+            photoAutoTimer = null;
+            photoAutoBtn.textContent = 'Capture auto (tous les 800 ms)';
+        }
+
+        async function photoReconstruct() {
+            if (photoFrames.length < 12) {
+                photoSetStatus('Prenez au moins 12 photos pour un bon résultat.', 'err');
+                return;
+            }
+            photoReconstructBtn.disabled = true;
+            photoSetStatus('Envoi des photos et génération de la vue 360°… (peut prendre 1 à 3 minutes)');
+
+            try {
+                const formData = new FormData();
+                photoFrames.forEach(function(f, i) {
+                    formData.append('images', f.blob, 'frame_' + i + '.jpg');
+                });
+
+                const res = await fetch('/api/reconstruct-360', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error('Échec de la reconstruction (' + res.status + ')');
+                const data = await res.json();
+
+                const viewer = document.getElementById('photoViewer');
+                viewer.src = data.modelUrl;
+                document.getElementById('photoViewerWrap').style.display = 'block';
+                photoSetStatus('Vue 360° générée avec succès !', 'ok');
+                VMPTracker.trackScan('Photogrammetrie 360');
+            } catch (e) {
+                photoSetStatus('Erreur : ' + e.message, 'err');
+                photoReconstructBtn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>

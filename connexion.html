@@ -73,6 +73,7 @@
         </div>
     </div>
 
+    <script src="vmp-tracker.js"></script>
     <script>
         function togglePassword(id) {
             const input = document.getElementById(id);
@@ -129,6 +130,7 @@
             };
 
             localStorage.setItem('vmp_session', JSON.stringify(sessionData));
+            VMPTracker.trackLogin(email);
 
             // Redirection vers le dashboard client
             window.location.href = 'dashboard.html';

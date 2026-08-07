@@ -89,6 +89,7 @@
         </div>
     </div>
 
+    <script src="vmp-tracker.js"></script>
     <script>
         function togglePassword(id) {
             const input = document.getElementById(id);
@@ -153,6 +154,7 @@
                 loginDate: new Date().toISOString()
             };
             localStorage.setItem('vmp_session', JSON.stringify(sessionData));
+            VMPTracker.trackRegister(email, name, restaurant);
 
             successDiv.textContent = 'Compte cree avec succes ! Redirection...';
             successDiv.style.display = 'block';
