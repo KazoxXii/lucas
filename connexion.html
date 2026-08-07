@@ -56,6 +56,12 @@
             <div class="auth-footer">
                 <p>Pas encore de compte ? <a href="inscription.html">Creer un compte</a></p>
             </div>
+
+            <div style="text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--bordure);">
+                <button onclick="document.getElementById('adminModal').classList.add('active')" style="background:none;border:none;color:var(--gris-fonce);font-size:0.75rem;cursor:pointer;padding:0.3rem 0.6rem;border-radius:6px;transition:all 0.3s;" onmouseover="this.style.color='var(--jaune)'" onmouseout="this.style.color='var(--gris-fonce)'">
+                    🛡️ Espace Admin
+                </button>
+            </div>
         </div>
 
         <div class="auth-visual">
@@ -69,6 +75,36 @@
                     <div class="auth-feature">✅ Statistiques en temps reel</div>
                     <div class="auth-feature">✅ Support dedie 24/7</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADMIN -->
+    <div id="adminModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;padding:1rem;" class="active">
+        <div style="background:var(--noir-card);border:1px solid var(--bordure);border-radius:16px;padding:2rem;max-width:400px;width:100%;position:relative;">
+            <button onclick="document.getElementById('adminModal').classList.remove('active')" style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:var(--gris);font-size:1.2rem;cursor:pointer;">×</button>
+            <div style="text-align:center;margin-bottom:1.5rem;">
+                <div style="width:48px;height:48px;background:rgba(245,166,35,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;font-size:1.5rem;">🛡️</div>
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:0.25rem;">Connexion Admin</h2>
+                <p style="color:var(--gris);font-size:0.85rem;">Acces reserve aux administrateurs</p>
+            </div>
+            <form id="adminLoginForm">
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--gris);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.5px;">Email administrateur</label>
+                    <input type="email" id="adminEmail" placeholder="admin@voirmonplat.com" required style="width:100%;padding:0.85rem 1rem;background:var(--noir);border:1px solid var(--bordure);border-radius:10px;color:var(--blanc);font-size:1rem;font-family:inherit;outline:none;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:var(--gris);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.5px;">Mot de passe</label>
+                    <div style="position:relative;">
+                        <input type="password" id="adminPassword" placeholder="••••••••" required style="width:100%;padding:0.85rem 1rem;padding-right:3rem;background:var(--noir);border:1px solid var(--bordure);border-radius:10px;color:var(--blanc);font-size:1rem;font-family:inherit;outline:none;">
+                        <button type="button" onclick="togglePassword('adminPassword')" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gris);cursor:pointer;font-size:1.2rem;">👁️</button>
+                    </div>
+                </div>
+                <div id="adminError" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;padding:0.75rem;border-radius:8px;font-size:0.85rem;text-align:center;margin-bottom:1rem;"></div>
+                <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+            </form>
+            <div style="text-align:center;margin-top:1rem;">
+                <span style="color:var(--gris-fonce);font-size:0.75rem;">🔒 Connexion securisee</span>
             </div>
         </div>
     </div>
@@ -134,6 +170,41 @@
 
             // Redirection vers le dashboard client
             window.location.href = 'dashboard.html';
+        });
+
+        // ADMIN LOGIN
+        const ADMIN_CREDENTIALS = {
+            email: 'admin@voirmonplat.com',
+            password: 'VoirMonPlat+2026'
+        };
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('adminError');
+            errorDiv.style.display = 'none';
+
+            if (email !== ADMIN_CREDENTIALS.email || password !== ADMIN_CREDENTIALS.password) {
+                errorDiv.textContent = 'Email ou mot de passe incorrect.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const session = {
+                email: email,
+                loggedIn: true,
+                loginDate: new Date().toISOString()
+            };
+            localStorage.setItem('vmp_admin_session', JSON.stringify(session));
+            VMPTracker.trackAdminLogin();
+            window.location.href = 'admin-panel.html';
+        });
+
+        // Show/hide modal
+        document.getElementById('adminModal').style.display = 'none';
+        document.querySelector('[onclick*="adminModal"]').addEventListener('click', function() {
+            document.getElementById('adminModal').style.display = 'flex';
         });
     </script>
 

@@ -682,6 +682,7 @@
     </div>
 
     <script src="vmp-tracker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         /*
          * ==============================================
@@ -1080,6 +1081,12 @@
 
         function completeScan() {
             stopAutoScan();
+            const glbPath = GLB_MODELS[selectedPlat.id];
+            if (!glbPath) {
+                switchScanMode('photo');
+                photoSetStatus('Aucun modèle 3D pour "' + selectedPlat.name + '". Capturez 24+ photos pour le générer.');
+                return;
+            }
             document.getElementById('scanSuccess').classList.add('active');
             setTimeout(() => {
                 document.getElementById('scanSuccess').classList.remove('active');
@@ -1115,6 +1122,13 @@
 
         // ==================== 3D VIEWER (model-viewer) ====================
         function openViewer(plat) {
+            const glbPath = GLB_MODELS[plat.id];
+            if (!glbPath) {
+                document.getElementById('scanSuccess').classList.remove('active');
+                switchScanMode('photo');
+                photoSetStatus('Aucun modèle 3D pour "' + plat.name + '". Capturez 24+ photos pour le générer.', 'err');
+                return;
+            }
             document.getElementById('viewer3d').classList.add('active');
             document.getElementById('dishName').textContent = plat.name;
             document.getElementById('dishPrice').textContent = plat.price;
@@ -1372,7 +1386,7 @@
 
         function photoUpdateProgress() {
             photoProgressBadge.textContent = photoFrames.length + ' / ' + PHOTO_TARGET + ' photos';
-            if (photoFrames.length >= 12) {
+            if (photoFrames.length >= 6) {
                 photoReconstructBtn.disabled = false;
             }
             if (photoFrames.length >= PHOTO_TARGET && photoAutoTimer) {
@@ -1395,31 +1409,130 @@
         }
 
         async function photoReconstruct() {
-            if (photoFrames.length < 12) {
-                photoSetStatus('Prenez au moins 12 photos pour un bon résultat.', 'err');
+            if (photoFrames.length < 6) {
+                photoSetStatus('Prenez au moins 6 photos pour un bon résultat.', 'err');
                 return;
             }
             photoReconstructBtn.disabled = true;
-            photoSetStatus('Envoi des photos et génération de la vue 360°… (peut prendre 1 à 3 minutes)');
+            photoSetStatus('Génération de la vue 360° dans le navigateur…');
 
             try {
-                const formData = new FormData();
-                photoFrames.forEach(function(f, i) {
-                    formData.append('images', f.blob, 'frame_' + i + '.jpg');
+                const wrap = document.getElementById('photoViewerWrap');
+                wrap.style.display = 'block';
+                wrap.innerHTML = '';
+
+                const container = document.createElement('div');
+                container.style.cssText = 'width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#000;position:relative;';
+                wrap.appendChild(container);
+
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+                camera.position.set(0, 0, 3);
+
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setClearColor(0x000000);
+                container.appendChild(renderer.domElement);
+
+                const geometry = new THREE.CylinderGeometry(1.5, 1.5, 1.8, photoFrames.length, 1, true);
+
+                const materials = [];
+                const loadPromises = photoFrames.map(function(frame, i) {
+                    return new Promise(function(resolve) {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = function() {
+                            const texture = new THREE.Texture(img);
+                            texture.needsUpdate = true;
+                            texture.minFilter = THREE.LinearFilter;
+                            texture.magFilter = THREE.LinearFilter;
+                            const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+                            materials[i] = mat;
+                            resolve();
+                        };
+                        img.onerror = function() {
+                            materials[i] = new THREE.MeshBasicMaterial({ color: 0x333333, side: THREE.BackSide });
+                            resolve();
+                        };
+                        img.src = frame.url;
+                    });
                 });
 
-                const res = await fetch('/api/reconstruct-360', {
-                    method: 'POST',
-                    body: formData
+                await Promise.all(loadPromises);
+
+                while (materials.length < photoFrames.length) {
+                    materials.push(new THREE.MeshBasicMaterial({ color: 0x333333, side: THREE.BackSide }));
+                }
+
+                const mesh = new THREE.Mesh(geometry, materials);
+                scene.add(mesh);
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+                scene.add(ambientLight);
+
+                let isDragging = false;
+                let prevX = 0;
+                let rotY = 0;
+                let autoRotating = true;
+
+                container.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    prevX = e.clientX;
+                    autoRotating = false;
+                });
+                container.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    rotY += (e.clientX - prevX) * 0.01;
+                    prevX = e.clientX;
+                });
+                container.addEventListener('mouseup', function() { isDragging = false; });
+                container.addEventListener('mouseleave', function() { isDragging = false; });
+
+                container.addEventListener('touchstart', function(e) {
+                    isDragging = true;
+                    prevX = e.touches[0].clientX;
+                    autoRotating = false;
+                }, { passive: true });
+                container.addEventListener('touchmove', function(e) {
+                    if (!isDragging) return;
+                    rotY += (e.touches[0].clientX - prevX) * 0.01;
+                    prevX = e.touches[0].clientX;
+                }, { passive: true });
+                container.addEventListener('touchend', function() { isDragging = false; });
+
+                const controlsDiv = document.createElement('div');
+                controlsDiv.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5;';
+                controlsDiv.innerHTML = '<button id="photoAutoRotateBtn" style="padding:6px 14px;border-radius:20px;border:1px solid #f5a623;background:rgba(245,166,35,0.2);color:#f5a623;font-size:0.8rem;font-weight:600;cursor:pointer;">🔄 Auto-rotation ON</button>';
+                container.appendChild(controlsDiv);
+
+                document.getElementById('photoAutoRotateBtn').addEventListener('click', function() {
+                    autoRotating = !autoRotating;
+                    this.textContent = autoRotating ? '🔄 Auto-rotation ON' : '🔄 Auto-rotation OFF';
                 });
 
-                if (!res.ok) throw new Error('Échec de la reconstruction (' + res.status + ')');
-                const data = await res.json();
+                const hint = document.createElement('div');
+                hint.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:#666;white-space:nowrap;';
+                hint.textContent = 'Glisse pour tourner';
+                container.appendChild(hint);
 
-                const viewer = document.getElementById('photoViewer');
-                viewer.src = data.modelUrl;
-                document.getElementById('photoViewerWrap').style.display = 'block';
-                photoSetStatus('Vue 360° générée avec succès !', 'ok');
+                function animate() {
+                    requestAnimationFrame(animate);
+                    if (autoRotating) rotY += 0.005;
+                    mesh.rotation.y = rotY;
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                window.addEventListener('resize', function() {
+                    const w = container.clientWidth;
+                    const h = container.clientHeight;
+                    renderer.setSize(w, h);
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                });
+
+                photoSetStatus('Vue 360° générée avec succès ! Glissez pour tourner.', 'ok');
                 VMPTracker.trackScan('Photogrammetrie 360');
             } catch (e) {
                 photoSetStatus('Erreur : ' + e.message, 'err');
